@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[263]:
+# In[1]:
 
 
 get_ipython().system(' pip install -U scikit-learn')
@@ -12,7 +12,7 @@ get_ipython().system(' pip install -U git+https://github.com/huggingface/transfo
 get_ipython().system(' pip install -U git+https://github.com/huggingface/accelerate.git')
 
 
-# In[1]:
+# In[2]:
 
 
 from calendar import EPOCH
@@ -39,14 +39,13 @@ torch.manual_seed(42)
 
 import wandb
 
-import transformers
 from transformers import AdamW
 from transformers import PreTrainedModel, PretrainedConfig
 from transformers import XLMRobertaModel, XLMRobertaTokenizer
 from huggingface_hub import login
 
 
-# In[2]:
+# In[3]:
 
 
 TOKENIZER_TYPE = 'xlm-roberta-base'
@@ -70,7 +69,7 @@ NUM_CORES = os.cpu_count() - 2
 
 print(f"Percobaan 1 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
-# In[3]:
+# In[4]:
 
 
 # Preparing dataset
@@ -95,20 +94,20 @@ output = "datasets/test.csv"
 gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
 
-# In[4]:
+# In[5]:
 
 
 login(token=HF_TOKEN)
 
 
-# In[266]:
+# In[6]:
 
 
 get_ipython().run_line_magic('env', 'WANDB_API_KEY=97b170d223eb55f86fe1fbf9640831ad76381a74')
 wandb.login()
 
 
-# In[267]:
+# In[7]:
 
 
 get_ipython().run_line_magic('env', "WANDB_LOG_MODEL='end'")
@@ -120,14 +119,14 @@ run = wandb.init(
 )
 
 
-# In[268]:
+# In[8]:
 
 
 os.environ["WANDB_AGENT_MAX_INITIAL_FAILURES"]="1024"
 os.environ["WANDB_AGENT_DISABLE_FLAPPING"]="true"
 
 
-# In[5]:
+# In[9]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -138,7 +137,7 @@ print(device)
 
 # Prepare Dataset for Student
 
-# In[9]:
+# In[10]:
 
 
 df_train = pd.read_csv("datasets/train.csv", sep='\t')
@@ -151,7 +150,7 @@ df_train_student["label"] = df_train["label"]
 df_train_student.head()
 
 
-# In[10]:
+# In[11]:
 
 
 df_valid = pd.read_csv("datasets/validation.csv", sep='\t')
@@ -164,7 +163,7 @@ df_valid_student["label"] = df_valid["label"]
 df_valid_student.head()
 
 
-# In[11]:
+# In[12]:
 
 
 df_test = pd.read_csv("datasets/test.csv", sep='\t')
@@ -183,7 +182,7 @@ df_test_student.head()
 
 # Dataset from teacher will be from "IndoNLI", and using Indonesian only.
 
-# In[12]:
+# In[13]:
 
 
 df_train_t = pd.DataFrame()
@@ -194,14 +193,14 @@ df_train_t = df_train_t.sample(frac=1).reset_index(drop=True)
 display(df_train_t)
 
 
-# In[13]:
+# In[14]:
 
 
 print("Count per class train:") 
 print(df_train_t['label'].value_counts())
 
 
-# In[14]:
+# In[15]:
 
 
 df_valid_t = pd.DataFrame()
@@ -212,14 +211,14 @@ df_valid_t = df_valid_t.sample(frac=1).reset_index(drop=True)
 display(df_valid_t)
 
 
-# In[15]:
+# In[16]:
 
 
 print("Count per class valid:") 
 print(df_valid_t['label'].value_counts())
 
 
-# In[16]:
+# In[17]:
 
 
 df_test_t = pd.DataFrame()
@@ -230,7 +229,7 @@ df_test_t = df_test_t.sample(frac=1).reset_index(drop=True)
 display(df_test_t)
 
 
-# In[17]:
+# In[18]:
 
 
 print("Count per class test:") 
@@ -239,13 +238,13 @@ print(df_test_t['label'].value_counts())
 
 # ## Preprocessing
 
-# In[18]:
+# In[19]:
 
 
 tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
 
 
-# In[19]:
+# In[20]:
 
 
 class CompDataset(Dataset):
@@ -313,7 +312,7 @@ class CompDataset(Dataset):
         return len(self.df_data_teacher)
 
 
-# In[281]:
+# In[21]:
 
 
 train_data_cmp = CompDataset(df_train_t, df_train_student)
@@ -321,7 +320,7 @@ valid_data_cmp = CompDataset(df_valid_t, df_valid_student)
 test_data_cmp = CompDataset(df_test_t, df_test_student)
 
 
-# In[282]:
+# In[22]:
 
 
 train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
@@ -333,7 +332,7 @@ test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
 
 # Transfer Learning model as per Bandyopadhyay, D., et al (2022) paper, but using XLMR instead of mBERT
 
-# In[283]:
+# In[23]:
 
 
 class TransferLearningPaper(PreTrainedModel):
@@ -446,7 +445,7 @@ class TransferLearningPaper(PreTrainedModel):
         tokenizer.push_to_hub(HF_MODEL_NAME)
 
 
-# In[284]:
+# In[24]:
 
 
 config = PretrainedConfig(
@@ -478,7 +477,7 @@ transferlearning_model = transferlearning_model.to(device)
 
 # ## Training
 
-# In[ ]:
+# In[25]:
 
 
 gc.collect()
@@ -486,7 +485,7 @@ gc.collect()
 
 # Function to compute metrics
 
-# In[ ]:
+# In[26]:
 
 
 def compute_metrics(p):
@@ -504,7 +503,7 @@ def compute_metrics(p):
 
 # Manual training function
 
-# In[ ]:
+# In[27]:
 
 
 def train(the_model, train_data, pgb):
@@ -557,7 +556,7 @@ def train(the_model, train_data, pgb):
     return training_loss
 
 
-# In[ ]:
+# In[28]:
 
 
 def validate(the_model, valid_data):
@@ -620,7 +619,7 @@ def validate(the_model, valid_data):
     return eval_loss, out_metrics
 
 
-# In[ ]:
+# In[29]:
 
 
 def training_sequence(the_model, train_data, valid_data, epochs):
@@ -655,24 +654,24 @@ def training_sequence(the_model, train_data, valid_data, epochs):
     }
 
 
-# In[ ]:
+# In[30]:
 
 
 training_result = training_sequence(transferlearning_model, train_dataloader, valid_dataloader, NUM_EPOCHS)
 
 
-# In[ ]:
+# In[31]:
 
 
 wandb.finish()
 
 
-# In[ ]:
+# In[32]:
 
 transferlearning_model.upload_to_huggingface()
 
 
-# In[ ]:
+# In[33]:
 STUDENT_LRATE = 2e-5
 LAMBDA_KLD = 0.5 # between 0.01 - 0.5
 MAX_LEN = 512
@@ -684,7 +683,7 @@ LAMBDA_L2 = 3e-5
 print(f"Percobaan 2 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 
-# In[ ]:
+# In[34]:
 
 run = wandb.init(
   project="javanese_nli",
@@ -693,7 +692,7 @@ run = wandb.init(
   tags=["transferlearning", "bandyopadhyay", "xlmr"]
 )
 
-# In[ ]:
+# In[35]:
 
 transferlearning_model = TransferLearningPaper(
     config = config,
@@ -709,7 +708,7 @@ wandb.finish()
 transferlearning_model.upload_to_huggingface()
 
 
-# In[ ]:
+# In[36]:
 STUDENT_LRATE = 2e-5
 LAMBDA_KLD = 0.5 # between 0.01 - 0.5
 MAX_LEN = 512
@@ -721,7 +720,7 @@ LAMBDA_L2 = 3e-5
 print(f"Percobaan 3 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 
-# In[ ]:
+# In[37]:
 
 run = wandb.init(
   project="javanese_nli",
@@ -730,7 +729,7 @@ run = wandb.init(
   tags=["transferlearning", "bandyopadhyay", "xlmr"]
 )
 
-# In[ ]:
+# In[38]:
 
 transferlearning_model = TransferLearningPaper(
     config = config,
@@ -745,7 +744,7 @@ training_result = training_sequence(transferlearning_model, train_dataloader, va
 wandb.finish()
 transferlearning_model.upload_to_huggingface()
 
-# In[ ]:
+# In[39]:
 
 
 logout()
