@@ -105,14 +105,11 @@ login(token=HF_TOKEN)
 # In[6]:
 
 
-get_ipython().run_line_magic('env', 'WANDB_API_KEY=97b170d223eb55f86fe1fbf9640831ad76381a74')
-wandb.login()
+wandb.login(key='97b170d223eb55f86fe1fbf9640831ad76381a74')
 
 
 # In[7]:
 
-
-get_ipython().run_line_magic('env', "WANDB_LOG_MODEL='end'")
 run = wandb.init(
   project="javanese_nli",
   notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
