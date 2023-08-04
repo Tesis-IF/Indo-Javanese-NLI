@@ -2,14 +2,16 @@
 # coding: utf-8
 
 # In[1]:
+import subprocess
+import sys
 
-
-get_ipython().system(' pip install -U scikit-learn')
-get_ipython().system(' pip install wandb')
-get_ipython().system(' pip install tqdm')
-get_ipython().system(' pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117')
-get_ipython().system(' pip install -U git+https://github.com/huggingface/transformers.git')
-get_ipython().system(' pip install -U git+https://github.com/huggingface/accelerate.git')
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', "scikit-learn"])
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', "wandb"])
+subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "tqdm"])
+subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117"])
+subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/transformers.git"])
+subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/accelerate.git"])
+subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "gdown"])
 
 
 # In[2]:
