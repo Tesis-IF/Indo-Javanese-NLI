@@ -189,7 +189,6 @@ df_train_t["premise"] = df_train["premise"]
 df_train_t["hypothesis"] = df_train["hypothesis"]
 df_train_t["label"] = df_train["label"]
 df_train_t = df_train_t.sample(frac=1).reset_index(drop=True)
-display(df_train_t)
 
 
 # In[14]:
@@ -207,7 +206,6 @@ df_valid_t["premise"] = df_valid["premise"]
 df_valid_t["hypothesis"] = df_valid["hypothesis"]
 df_valid_t["label"] = df_valid["label"]
 df_valid_t = df_valid_t.sample(frac=1).reset_index(drop=True)
-display(df_valid_t)
 
 
 # In[16]:
@@ -225,7 +223,6 @@ df_test_t["premise"] = df_test["premise"]
 df_test_t["hypothesis"] = df_test["hypothesis"]
 df_test_t["label"] = df_test["label"]
 df_test_t = df_test_t.sample(frac=1).reset_index(drop=True)
-display(df_test_t)
 
 
 # In[18]:
