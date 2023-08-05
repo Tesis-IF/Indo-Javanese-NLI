@@ -44,7 +44,7 @@ import wandb
 from transformers import AdamW
 from transformers import PreTrainedModel, PretrainedConfig
 from transformers import XLMRobertaModel, XLMRobertaTokenizer
-from huggingface_hub import login
+from huggingface_hub import login, logout
 
 
 # In[3]:
@@ -54,7 +54,7 @@ TOKENIZER_TYPE = 'xlm-roberta-base'
 MBERT_TYPE = 'xlm-roberta-base'
 MODEL_TEACHER_TYPE = 'jalaluddin94/xlmr-nli-indoindo'
 HF_MODEL_NAME = 'jalaluddin94/trf-learning-indojavanesenli-xlmr'
-
+SAVED_MODEL_PATH = 'indojavanese-nli-xlmr'
 # DATASET_NAME = 'jalaluddin94/IndoJavaneseNLI'
 
 STUDENT_LRATE = 2e-5
@@ -96,26 +96,10 @@ output = "datasets/test.csv"
 gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
 
-# In[5]:
-
-
-login(token=HF_TOKEN)
-
-
 # In[6]:
 
 
 wandb.login(key='97b170d223eb55f86fe1fbf9640831ad76381a74')
-
-
-# In[7]:
-
-run = wandb.init(
-  project="javanese_nli",
-  notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
-  name="trf-lrn-experiment-xlmr-epoch3-batchsize8-lamdakld0.5",
-  tags=["transferlearning", "bandyopadhyay", "xlmr"]
-)
 
 
 # In[8]:
@@ -435,6 +419,14 @@ class TransferLearningPaper(PreTrainedModel):
         self.optimizer_student.zero_grad()
         loss.backward()
         self.optimizer_student.step()
+
+    def save_model(self, model_name):
+        if len(model_name) > 0:
+            # save
+            cur_dir = os.getcwd() if os.getcwd()[:-1] == '/' else os.getcwd() + '/'
+            cur_dir = cur_dir + model_name if model_name[0] != '/' else cur_dir + model_name[1:]
+            print(f"Saving model to {cur_dir}")
+            self.xlmr_model_student.save_pretrained(save_directory=cur_dir)
         
     def upload_to_huggingface(self):
         self.xlmr_model_student.push_to_hub(HF_MODEL_NAME)
@@ -618,9 +610,23 @@ def validate(the_model, valid_data):
 # In[29]:
 
 
-def training_sequence(the_model, train_data, valid_data, epochs):
+def training_sequence(the_model, 
+                      train_data, 
+                      valid_data, 
+                      epochs, 
+                      run_name: str,
+                      huggingface_token: str = None,
+                      save_model=True, 
+                      upload_model=True):
     track_train_loss = []
     track_val_loss = []
+
+    run = wandb.init(
+        project="javanese_nli",
+        notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
+        name=run_name,
+        tags=["transferlearning", "bandyopadhyay", "xlmr"]
+    )
     
     pbar_format = "{l_bar}{bar} | Epoch: {n:.2f}/{total_fmt} [{elapsed}<{remaining}]"
     with tqdm(total=epochs, colour="blue", leave=True, position=0, bar_format=pbar_format) as t:
@@ -635,14 +641,24 @@ def training_sequence(the_model, train_data, valid_data, epochs):
             t.set_description(f"Train loss: {training_loss:.3f} Valid loss: {valid_loss:.3f}")
 
             if valid_loss < min(track_val_loss) or ep + 1 == 1:
-                the_model.save_pretrained(
-                    save_directory = MODEL_PATH + "indojavanesenli-transfer-learning"
-                )
+                if save_model:
+                    the_model.save_model(SAVED_MODEL_PATH)
 
             wandb.log({
                 "train_loss/epoch": training_loss,
                 "validation_loss/epoch": valid_loss
             })
+        
+        if upload_model:
+            try:
+                login(token=huggingface_token)
+                the_model.upload_to_huggingface()
+                logout()
+            except Exception as e:
+                print("Error! Cannot upload model to Huggingface!")
+                print(e)
+        
+        wandb.finish()
         
     return {
         "training_loss": track_train_loss,
@@ -653,18 +669,16 @@ def training_sequence(the_model, train_data, valid_data, epochs):
 # In[30]:
 
 
-training_result = training_sequence(transferlearning_model, train_dataloader, valid_dataloader, NUM_EPOCHS)
-
-
-# In[31]:
-
-
-wandb.finish()
-
-
-# In[32]:
-
-transferlearning_model.upload_to_huggingface()
+training_result = training_sequence(
+    transferlearning_model, 
+    train_dataloader, 
+    valid_dataloader, 
+    NUM_EPOCHS, 
+    run_name = 'trf-lrn-experiment-xlmr-epoch3-batchsize8-lamdakld0.5',
+    huggingface_token=HF_TOKEN,
+    save_model = False,
+    upload_model = True
+    )
 
 
 # In[33]:
@@ -679,15 +693,6 @@ LAMBDA_L2 = 3e-5
 print(f"Percobaan 2 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 
-# In[34]:
-
-run = wandb.init(
-  project="javanese_nli",
-  notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
-  name="trf-lrn-experiment-xlmr-epoch5-batchsize8-lamdakld0.5",
-  tags=["transferlearning", "bandyopadhyay", "xlmr"]
-)
-
 # In[35]:
 
 transferlearning_model = TransferLearningPaper(
@@ -698,10 +703,16 @@ transferlearning_model = TransferLearningPaper(
 )
 
 transferlearning_model = transferlearning_model.to(device)
-training_result = training_sequence(transferlearning_model, train_dataloader, valid_dataloader, NUM_EPOCHS)
-
-wandb.finish()
-transferlearning_model.upload_to_huggingface()
+training_result = training_sequence(
+    transferlearning_model, 
+    train_dataloader, 
+    valid_dataloader, 
+    NUM_EPOCHS,
+    run_name = 'trf-lrn-experiment-xlmr-epoch5-batchsize8-lamdakld0.5',
+    huggingface_token=HF_TOKEN,
+    save_model = False,
+    upload_model = True
+    )
 
 
 # In[36]:
@@ -718,15 +729,6 @@ print(f"Percobaan 3 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Stud
 
 # In[37]:
 
-run = wandb.init(
-  project="javanese_nli",
-  notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
-  name="trf-lrn-experiment-xlmr-epoch10-batchsize8-lamdakld0.5",
-  tags=["transferlearning", "bandyopadhyay", "xlmr"]
-)
-
-# In[38]:
-
 transferlearning_model = TransferLearningPaper(
     config = config,
     lambda_kld = LAMBDA_KLD, # antara 0.01-0.5
@@ -735,13 +737,14 @@ transferlearning_model = TransferLearningPaper(
 )
 
 transferlearning_model = transferlearning_model.to(device)
-training_result = training_sequence(transferlearning_model, train_dataloader, valid_dataloader, NUM_EPOCHS)
-
-wandb.finish()
-transferlearning_model.upload_to_huggingface()
-
-# In[39]:
-
-
-logout()
+training_result = training_sequence(
+    transferlearning_model, 
+    train_dataloader, 
+    valid_dataloader, 
+    NUM_EPOCHS,
+    run_name = 'trf-lrn-experiment-xlmr-epoch10-batchsize8-lamdakld0.5',
+    huggingface_token=HF_TOKEN,
+    save_model = False,
+    upload_model = True
+    )
 
