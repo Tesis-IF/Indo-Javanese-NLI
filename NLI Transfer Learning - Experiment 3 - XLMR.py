@@ -96,31 +96,31 @@ output = "datasets/test.csv"
 gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
 
-# In[6]:
+# In[5]:
 
 
 wandb.login(key='97b170d223eb55f86fe1fbf9640831ad76381a74')
 
 
-# In[8]:
+# In[6]:
 
 
 os.environ["WANDB_AGENT_MAX_INITIAL_FAILURES"]="1024"
 os.environ["WANDB_AGENT_DISABLE_FLAPPING"]="true"
 
 
-# In[9]:
+# In[7]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
+print(f"GPU used: {device}")
 
 
 # ## Data Preparation
 
 # Prepare Dataset for Student
 
-# In[10]:
+# In[8]:
 
 
 df_train = pd.read_csv("datasets/train.csv", sep='\t')
@@ -133,7 +133,7 @@ df_train_student["label"] = df_train["label"]
 df_train_student.head()
 
 
-# In[11]:
+# In[9]:
 
 
 df_valid = pd.read_csv("datasets/validation.csv", sep='\t')
@@ -146,7 +146,7 @@ df_valid_student["label"] = df_valid["label"]
 df_valid_student.head()
 
 
-# In[12]:
+# In[10]:
 
 
 df_test = pd.read_csv("datasets/test.csv", sep='\t')
@@ -165,7 +165,7 @@ df_test_student.head()
 
 # Dataset from teacher will be from "IndoNLI", and using Indonesian only.
 
-# In[13]:
+# In[11]:
 
 
 df_train_t = pd.DataFrame()
@@ -175,14 +175,14 @@ df_train_t["label"] = df_train["label"]
 df_train_t = df_train_t.sample(frac=1).reset_index(drop=True)
 
 
-# In[14]:
+# In[12]:
 
 
 print("Count per class train:") 
 print(df_train_t['label'].value_counts())
 
 
-# In[15]:
+# In[13]:
 
 
 df_valid_t = pd.DataFrame()
@@ -192,14 +192,14 @@ df_valid_t["label"] = df_valid["label"]
 df_valid_t = df_valid_t.sample(frac=1).reset_index(drop=True)
 
 
-# In[16]:
+# In[14]:
 
 
 print("Count per class valid:") 
 print(df_valid_t['label'].value_counts())
 
 
-# In[17]:
+# In[15]:
 
 
 df_test_t = pd.DataFrame()
@@ -209,7 +209,7 @@ df_test_t["label"] = df_test["label"]
 df_test_t = df_test_t.sample(frac=1).reset_index(drop=True)
 
 
-# In[18]:
+# In[16]:
 
 
 print("Count per class test:") 
@@ -218,13 +218,13 @@ print(df_test_t['label'].value_counts())
 
 # ## Preprocessing
 
-# In[19]:
+# In[17]:
 
 
 tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
 
 
-# In[20]:
+# In[18]:
 
 
 class CompDataset(Dataset):
@@ -292,7 +292,7 @@ class CompDataset(Dataset):
         return len(self.df_data_teacher)
 
 
-# In[21]:
+# In[19]:
 
 
 train_data_cmp = CompDataset(df_train_t, df_train_student)
@@ -300,7 +300,7 @@ valid_data_cmp = CompDataset(df_valid_t, df_valid_student)
 test_data_cmp = CompDataset(df_test_t, df_test_student)
 
 
-# In[22]:
+# In[20]:
 
 
 train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
@@ -312,7 +312,7 @@ test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
 
 # Transfer Learning model as per Bandyopadhyay, D., et al (2022) paper, but using XLMR instead of mBERT
 
-# In[23]:
+# In[21]:
 
 
 class TransferLearningPaper(PreTrainedModel):
@@ -433,7 +433,7 @@ class TransferLearningPaper(PreTrainedModel):
         tokenizer.push_to_hub(HF_MODEL_NAME)
 
 
-# In[24]:
+# In[22]:
 
 
 config = PretrainedConfig(
@@ -456,7 +456,7 @@ config = PretrainedConfig(
 print(config)
 transferlearning_model = TransferLearningPaper(
     config = config,
-    lambda_kld = LAMBDA_KLD, # antara 0.01-0.5
+    lambda_kld = LAMBDA_KLD, # between 0.01-0.5
     learningrate_student = STUDENT_LRATE,
     batchnorm_epsilon = BATCH_NORM_EPSILON
 )
@@ -465,7 +465,7 @@ transferlearning_model = transferlearning_model.to(device)
 
 # ## Training
 
-# In[25]:
+# In[23]:
 
 
 gc.collect()
@@ -473,7 +473,7 @@ gc.collect()
 
 # Function to compute metrics
 
-# In[26]:
+# In[24]:
 
 
 def compute_metrics(p):
@@ -491,7 +491,7 @@ def compute_metrics(p):
 
 # Manual training function
 
-# In[27]:
+# In[25]:
 
 
 def train(the_model, train_data, pgb):
@@ -544,7 +544,7 @@ def train(the_model, train_data, pgb):
     return training_loss
 
 
-# In[28]:
+# In[26]:
 
 
 def validate(the_model, valid_data):
@@ -607,7 +607,7 @@ def validate(the_model, valid_data):
     return eval_loss, out_metrics
 
 
-# In[29]:
+# In[27]:
 
 
 def training_sequence(the_model, 
@@ -666,7 +666,7 @@ def training_sequence(the_model,
     }
 
 
-# In[30]:
+# In[28]:
 
 
 training_result = training_sequence(
@@ -681,7 +681,8 @@ training_result = training_sequence(
     )
 
 
-# In[33]:
+# In[29]:
+
 STUDENT_LRATE = 2e-5
 LAMBDA_KLD = 0.5 # between 0.01 - 0.5
 MAX_LEN = 512
@@ -693,7 +694,7 @@ LAMBDA_L2 = 3e-5
 print(f"Percobaan 2 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 
-# In[35]:
+# In[30]:
 
 transferlearning_model = TransferLearningPaper(
     config = config,
@@ -727,7 +728,7 @@ LAMBDA_L2 = 3e-5
 print(f"Percobaan 3 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 
-# In[37]:
+# In[31]:
 
 transferlearning_model = TransferLearningPaper(
     config = config,
