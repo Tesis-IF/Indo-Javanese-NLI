@@ -3,28 +3,24 @@
 
 # In[1]:
 import subprocess
-import sys
+import sys, getopt
 
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', "scikit-learn"])
 subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-U', "wandb"])
 subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "tqdm"])
-subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117"])
-subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/transformers.git"])
-subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/accelerate.git"])
+# subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117"])
+# subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/transformers.git"])
+# subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "git+https://github.com/huggingface/accelerate.git"])
 subprocess.check_call([sys.executable,  '-m', 'pip', 'install', '-U', "gdown"])
 
 
 # In[2]:
 
-
-from calendar import EPOCH
 import pandas as pd
 import numpy as np
 import os
 import gc
-import random
-import time
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 import gdown
 
@@ -32,7 +28,6 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
@@ -43,12 +38,11 @@ import wandb
 
 from transformers import AdamW
 from transformers import PreTrainedModel, PretrainedConfig
-from transformers import XLMRobertaModel, XLMRobertaTokenizer
+from transformers import XLMRobertaModel, XLMRobertaTokenizer, BertTokenizer, BertModel
 from huggingface_hub import login, logout
 
 
 # In[3]:
-
 
 TOKENIZER_TYPE = 'xlm-roberta-base'
 MBERT_TYPE = 'xlm-roberta-base'
@@ -57,19 +51,10 @@ HF_MODEL_NAME = 'jalaluddin94/trf-learning-indojavanesenli-xlmr'
 SAVED_MODEL_PATH = 'indojavanese-nli-xlmr'
 # DATASET_NAME = 'jalaluddin94/IndoJavaneseNLI'
 
-STUDENT_LRATE = 2e-5
-LAMBDA_KLD = 0.5 # between 0.01 - 0.5
-MAX_LEN = 512
-NUM_EPOCHS = 3
-BATCH_SIZE = 8
-BATCH_NORM_EPSILON = 1e-5
-LAMBDA_L2 = 3e-5
-
 HF_TOKEN = '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'
 
 NUM_CORES = os.cpu_count() - 2
 
-print(f"Percobaan 1 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
 
 # In[4]:
 
@@ -216,32 +201,26 @@ print("Count per class test:")
 print(df_test_t['label'].value_counts())
 
 
-# ## Preprocessing
-
 # In[17]:
 
 
-tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
-
-
-# In[18]:
-
-
 class CompDataset(Dataset):
-    def __init__(self, df_teacher, df_student):
+    def __init__(self, df_teacher, df_student, max_len, tokenizer):
         self.df_data_teacher = df_teacher
         self.df_data_student = df_student
+        self.tokenizer = tokenizer
+        self.max_length = max_len
         
     def __getitem__(self, index):
         # Teacher
         sentence_teacher_1 = self.df_data_teacher.loc[index, 'premise']
         sentence_teacher_2 = self.df_data_teacher.loc[index, 'hypothesis']
         
-        encoded_dict_teacher = tokenizer.encode_plus(
+        encoded_dict_teacher = self.tokenizer.encode_plus(
             sentence_teacher_1,
             sentence_teacher_2,
             add_special_tokens = True,
-            max_length = MAX_LEN,
+            max_length = self.max_length,
             truncation='longest_first',
             padding = 'max_length',
             return_attention_mask = True,
@@ -259,11 +238,11 @@ class CompDataset(Dataset):
         sentence_student_1 = self.df_data_student.loc[index, 'premise']
         sentence_student_2 = self.df_data_student.loc[index, 'hypothesis']
         
-        encoded_dict_student = tokenizer.encode_plus(
+        encoded_dict_student = self.tokenizer.encode_plus(
             sentence_student_1,
             sentence_student_2,
             add_special_tokens = True,
-            max_length = MAX_LEN,
+            max_length = self.max_length,
             truncation='longest_first',
             padding = 'max_length',
             return_attention_mask = True,
@@ -292,32 +271,18 @@ class CompDataset(Dataset):
         return len(self.df_data_teacher)
 
 
-# In[19]:
-
-
-train_data_cmp = CompDataset(df_train_t, df_train_student)
-valid_data_cmp = CompDataset(df_valid_t, df_valid_student)
-test_data_cmp = CompDataset(df_test_t, df_test_student)
-
-
-# In[20]:
-
-
-train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
-valid_dataloader = DataLoader(valid_data_cmp, batch_size = BATCH_SIZE)
-test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
-
-
 # ## Model
 
 # Transfer Learning model as per Bandyopadhyay, D., et al (2022) paper, but using XLMR instead of mBERT
 
-# In[21]:
+# In[18]:
 
 
 class TransferLearningPaper(PreTrainedModel):
-    def __init__(self, config, lambda_kld, learningrate_student, batchnorm_epsilon = 1e-5):
+    def __init__(self, config, lambda_kld, learningrate_student, tokenizer, mbert_type, batchnorm_epsilon = 1e-5):
         super(TransferLearningPaper, self).__init__(config)
+
+        self.tokenizer = tokenizer
         
         self.xlmr_model_teacher = XLMRobertaModel.from_pretrained(
             MODEL_TEACHER_TYPE, # using pretrained mBERT in INA language
@@ -328,12 +293,25 @@ class TransferLearningPaper(PreTrainedModel):
         # Freeze teacher mBERT parameters
         for params_teacher in self.xlmr_model_teacher.parameters():
             params_teacher.requires_grad = False
-    
+
         self.xlmr_model_student = XLMRobertaModel.from_pretrained(
             MBERT_TYPE,
             num_labels = 3,
             output_hidden_states=True
         )
+    
+        if mbert_type.lower() == "xlmr":
+            self.xlmr_model_student = XLMRobertaModel.from_pretrained(
+                MBERT_TYPE,
+                num_labels = 3,
+                output_hidden_states=True
+            )
+        elif mbert_type.lower() == "mbert":
+            self.xlmr_model_student = BertModel.from_pretrained( #XLMRobertaModel.from_pretrained(
+                MBERT_TYPE,
+                num_labels = 3,
+                output_hidden_states=True
+            )
         
         # Unfreeze student mBERT parameters
         for params_student in self.xlmr_model_student.parameters():
@@ -430,42 +408,12 @@ class TransferLearningPaper(PreTrainedModel):
         
     def upload_to_huggingface(self):
         self.xlmr_model_student.push_to_hub(HF_MODEL_NAME)
-        tokenizer.push_to_hub(HF_MODEL_NAME)
-
-
-# In[22]:
-
-
-config = PretrainedConfig(
-    problem_type = "single_label_classification",
-    id2label = {
-        "0": "ENTAIL",
-        "1": "NEUTRAL",
-        "2": "CONTRADICTION"
-    },
-    label2id = {
-        "ENTAIL": 0,
-        "NEUTRAL": 1,
-        "CONTRADICTION": 2
-    },
-    num_labels = 3,
-    hidden_size = 768,
-    name_or_path = "indojavanesenli-transfer-learning",
-    finetuning_task = "indonesian-javanese natural language inference"
-)
-print(config)
-transferlearning_model = TransferLearningPaper(
-    config = config,
-    lambda_kld = LAMBDA_KLD, # between 0.01-0.5
-    learningrate_student = STUDENT_LRATE,
-    batchnorm_epsilon = BATCH_NORM_EPSILON
-)
-transferlearning_model = transferlearning_model.to(device)
+        self.tokenizer.push_to_hub(HF_MODEL_NAME)
 
 
 # ## Training
 
-# In[23]:
+# In[19]:
 
 
 gc.collect()
@@ -473,7 +421,7 @@ gc.collect()
 
 # Function to compute metrics
 
-# In[24]:
+# In[20]:
 
 
 def compute_metrics(p):
@@ -491,10 +439,10 @@ def compute_metrics(p):
 
 # Manual training function
 
-# In[25]:
+# In[21]:
 
 
-def train(the_model, train_data, pgb):
+def train(the_model, train_data, pgb, batch_size):
     the_model.train()
     
     batch_loss = 0
@@ -528,26 +476,26 @@ def train(the_model, train_data, pgb):
         the_model.backpro_compute(loss_model) # backward pass and gradient accumulation
         
         # Accumulate gradients for the desired number of mini-batches
-        if(batch+1) % BATCH_SIZE == 0:
+        if(batch+1) % batch_size == 0:
             # update weights
             the_model.update_std_weights_and_clear_grad()
         
         pgb.update(1 / len(train_data))
     
     # Make sure to update the weights for any remaining accumulated gradients
-    if (batch+1) % BATCH_SIZE != 0:
+    if (batch+1) % batch_size != 0:
         the_model.update_std_weights()
         
-    training_loss = batch_loss / BATCH_SIZE
+    training_loss = batch_loss / batch_size
     wandb.log({"train/loss": training_loss})
     
     return training_loss
 
 
-# In[26]:
+# In[22]:
 
 
-def validate(the_model, valid_data):
+def validate(the_model, valid_data, batch_size):
     the_model.eval()
     
     batch_loss = 0
@@ -587,7 +535,7 @@ def validate(the_model, valid_data):
             loss_model = output["loss"]
             batch_loss += loss_model
     
-        eval_loss = batch_loss / BATCH_SIZE
+        eval_loss = batch_loss / batch_size
         wandb.log({
             "eval/loss": eval_loss, 
             "eval/f1_score": np.average(eval_f1), 
@@ -606,14 +554,77 @@ def validate(the_model, valid_data):
     
     return eval_loss, out_metrics
 
+# In[23]:
 
-# In[27]:
+
+def test(the_model, test_data, batch_size):
+    the_model.eval()
+    
+    batch_loss = 0
+    
+    eval_f1 = []
+    eval_accuracy = []
+    eval_precision = []
+    eval_recall = []
+    
+    with torch.no_grad():
+        for batch, data in enumerate(test_data):
+            input_ids_teacher = data["input_ids_teacher"].to(device)
+            attention_mask_teacher = data["attention_mask_teacher"].to(device)
+            lbl_teacher = data["lbl_teacher"].to(device)
+            input_ids_student = data["input_ids_student"].to(device)
+            attention_mask_student = data["attention_mask_student"].to(device)
+            lbl_student = data["lbl_student"].to(device)
+
+            output = the_model(
+                input_ids_teacher = input_ids_teacher, 
+                attention_mask_teacher = attention_mask_teacher, 
+                lbl_teacher = lbl_teacher,
+                input_ids_student = input_ids_student, 
+                attention_mask_student = attention_mask_student,
+                lbl_student = lbl_student
+            )
+
+            logits = output["logits"].cpu().detach().numpy()
+            packed_val = logits, lbl_student.cpu().detach().numpy()
+            metrics = compute_metrics(packed_val)
+            
+            eval_f1.append(metrics["f1_score"])
+            eval_accuracy.append(metrics["accuracy"])
+            eval_precision.append(metrics["precision"])
+            eval_recall.append(metrics["recall"])
+            
+            loss_model = output["loss"]
+            batch_loss += loss_model
+    
+        eval_loss = batch_loss / batch_size
+        wandb.log({
+            "test/loss": eval_loss, 
+            "test/f1_score": np.average(eval_f1), 
+            "test/accuracy": np.average(eval_accuracy),
+            "test/precision": np.average(eval_precision),
+            "test/recall": np.average(eval_recall)
+        })
+    
+    out_metrics = {
+        "test/loss": eval_loss, 
+        "test/f1_score": np.average(eval_f1), 
+        "test/accuracy": np.average(eval_accuracy),
+        "test/precision": np.average(eval_precision),
+        "test/recall": np.average(eval_recall)
+    }
+    
+    return eval_loss, out_metrics
+
+
+# In[23]:
 
 
 def training_sequence(the_model, 
                       train_data, 
                       valid_data, 
                       epochs, 
+                      batch_size,
                       run_name: str,
                       huggingface_token: str = None,
                       save_model=True, 
@@ -625,15 +636,15 @@ def training_sequence(the_model,
         project="javanese_nli",
         notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
         name=run_name,
-        tags=["transferlearning", "bandyopadhyay", "xlmr"]
+        tags=["transferlearning", "bandyopadhyay", "bertkld", "bert-kld", "xlmr"]
     )
     
     pbar_format = "{l_bar}{bar} | Epoch: {n:.2f}/{total_fmt} [{elapsed}<{remaining}]"
     with tqdm(total=epochs, colour="blue", leave=True, position=0, bar_format=pbar_format) as t:
         for ep in range(epochs):
-            training_loss = train(the_model, train_data, t)
+            training_loss = train(the_model, train_data, t, batch_size)
             t.set_description(f"Evaluating... Train loss: {training_loss:.3f}")
-            valid_loss, _ = validate(the_model, valid_data)
+            valid_loss, _ = validate(the_model, valid_data, batch_size)
 
             track_train_loss.append(training_loss)
             track_val_loss.append(valid_loss)
@@ -658,94 +669,142 @@ def training_sequence(the_model,
                 print("Error! Cannot upload model to Huggingface!")
                 print(e)
         
-        wandb.finish()
-        
     return {
         "training_loss": track_train_loss,
         "validation_loss": track_val_loss
     }
 
+# In[24]:
 
-# In[28]:
+def testing_sequence(
+        the_model,
+        testing_data,
+        batch_size
+):
+    track_test_loss = []
+    test_loss, _ = test(the_model, testing_data, batch_size)
 
+    track_test_loss.append(test_loss)
 
-training_result = training_sequence(
-    transferlearning_model, 
-    train_dataloader, 
-    valid_dataloader, 
-    NUM_EPOCHS, 
-    run_name = 'trf-lrn-experiment-xlmr-epoch3-batchsize8-lamdakld0.5',
-    huggingface_token=HF_TOKEN,
-    save_model = False,
-    upload_model = True
-    )
+    wandb.log({
+        "test_loss/epoch": test_loss
+    })
 
-
-# In[29]:
-
-STUDENT_LRATE = 2e-5
-LAMBDA_KLD = 0.5 # between 0.01 - 0.5
-MAX_LEN = 512
-NUM_EPOCHS = 5
-BATCH_SIZE = 8
-BATCH_NORM_EPSILON = 1e-5
-LAMBDA_L2 = 3e-5
-
-print(f"Percobaan 2 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
+    return {
+        "testing_loss": track_test_loss
+    }
 
 
-# In[30]:
+# In[25]:
 
-transferlearning_model = TransferLearningPaper(
-    config = config,
-    lambda_kld = LAMBDA_KLD, # antara 0.01-0.5
-    learningrate_student = STUDENT_LRATE,
-    batchnorm_epsilon = BATCH_NORM_EPSILON
-)
+def main(argv):
+    opts, args = getopt.getopt(argv,"h:b:e:m:s:l:u:", ["help", "batch_size=", "max_len=", "std_lr=", "epoch=", "lambda_kld=", "used_model="])
 
-transferlearning_model = transferlearning_model.to(device)
-training_result = training_sequence(
-    transferlearning_model, 
-    train_dataloader, 
-    valid_dataloader, 
-    NUM_EPOCHS,
-    run_name = 'trf-lrn-experiment-xlmr-epoch5-batchsize8-lamdakld0.5',
-    huggingface_token=HF_TOKEN,
-    save_model = False,
-    upload_model = True
-    )
+    STUDENT_LRATE = 2e-5
+    LAMBDA_KLD = 0.5 # between 0.01 - 0.5
+    MAX_LEN = 512
+    NUM_EPOCHS = 3
+    BATCH_SIZE = 8
+    BATCH_NORM_EPSILON = 1e-5
+    USED_MODEL = "XLMR"
+    LAMBDA_L2 = 3e-5
 
 
-# In[36]:
-STUDENT_LRATE = 2e-5
-LAMBDA_KLD = 0.5 # between 0.01 - 0.5
-MAX_LEN = 512
-NUM_EPOCHS = 10
-BATCH_SIZE = 8
-BATCH_NORM_EPSILON = 1e-5
-LAMBDA_L2 = 3e-5
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            filename = str(__file__)
+            if " " in filename:
+                filename = '"' + filename[0:len(filename)] + '"'
+            
+            print("To run Transfer Learning experiment for IndoJavaneseNLI, please run the following command:")
+            print("python " + filename + " --epoch=NUM_EPOCH --batch_size=BATCH_SIZE --max_len=MAX_LENGTH --std_lr=STUDENT_LEARNING_RATE --lambda_kld=LAMBDA_KLD")
+            sys.exit()
 
-print(f"Percobaan 3 - Epoch {EPOCH} Learning, Batch size {BATCH_SIZE}, Rate Student {STUDENT_LRATE}, Lambda KLD: {LAMBDA_KLD}")
+        elif opt in ("-b","--batch_size"):
+            BATCH_SIZE = int(arg)
+        elif opt in ("-e", "--epoch"):
+            NUM_EPOCHS = int(arg)
+        elif opt in ("-m", "--max_len"):
+            MAX_LEN = int(arg)
+        elif opt in ("-s", "--std_lr"):
+            STUDENT_LRATE = int(arg)
+        elif opt in ("-l", "--lambda_kld"):
+            LAMBDA_KLD = int(arg)
+        elif opt in ("-u", "--used_model"):
+            USED_MODEL = str(arg)
+        
+        if USED_MODEL.lower() not in ("xlmr", "mbert"):
+            print(f'{USED_MODEL} not recognized. Please enter "XLMR" or "MBERT" as model used.')
+            sys.exit()
+
+        if USED_MODEL.lower() == "xlmr":
+            TOKENIZER_TYPE = 'xlm-roberta-base'
+            MBERT_TYPE = 'xlm-roberta-base'
+            the_tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
+        elif USED_MODEL.lower() == "mbert":
+            TOKENIZER_TYPE = 'bert-base-multilingual-cased'
+            MBERT_TYPE = 'bert-base-multilingual-cased' #'xlm-roberta-base'
+            the_tokenizer = BertTokenizer.from_pretrained(TOKENIZER_TYPE)
+        
+        train_data_cmp = CompDataset(df_train_t, df_train_student, MAX_LEN, the_tokenizer)
+        valid_data_cmp = CompDataset(df_valid_t, df_valid_student, MAX_LEN, the_tokenizer)
+        test_data_cmp = CompDataset(df_test_t, df_test_student, MAX_LEN, the_tokenizer)
+
+        train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
+        valid_dataloader = DataLoader(valid_data_cmp, batch_size = BATCH_SIZE)
+        test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
+
+        print(f"Percobaan - Epoch {NUM_EPOCHS} Learning Rate Student {STUDENT_LRATE}, Batch size {BATCH_SIZE}, Lambda KLD: {LAMBDA_KLD}")
+
+        config = PretrainedConfig(
+            problem_type = "single_label_classification",
+            id2label = {
+                "0": "ENTAIL",
+                "1": "NEUTRAL",
+                "2": "CONTRADICTION"
+            },
+            label2id = {
+                "ENTAIL": 0,
+                "NEUTRAL": 1,
+                "CONTRADICTION": 2
+            },
+            num_labels = 3,
+            hidden_size = 768,
+            name_or_path = "indojavanesenli-transfer-learning-xlmr",
+            finetuning_task = "indonesian-javanese natural language inference"
+        )
+        
+        transferlearning_model = TransferLearningPaper(
+            config = config,
+            lambda_kld = LAMBDA_KLD, # between 0.01-0.5
+            learningrate_student = STUDENT_LRATE,
+            tokenizer = the_tokenizer,
+            mbert_type = MBERT_TYPE,
+            batchnorm_epsilon = BATCH_NORM_EPSILON
+        )
+
+        transferlearning_model = transferlearning_model.to(device)
+
+        training_result = training_sequence(
+            transferlearning_model, 
+            train_dataloader, 
+            valid_dataloader, 
+            NUM_EPOCHS, 
+            BATCH_SIZE,
+            run_name = f'trf-lrn-experiment-xlmr-epoch{NUM_EPOCHS}-batchsize{BATCH_SIZE}-lamdakld{LAMBDA_KLD}',
+            huggingface_token=HF_TOKEN,
+            save_model = False,
+            upload_model = True
+            )
+        
+        testing_result = testing_sequence(
+            transferlearning_model, 
+            test_dataloader,
+            BATCH_SIZE
+        )
 
 
-# In[31]:
+# In[26]:
 
-transferlearning_model = TransferLearningPaper(
-    config = config,
-    lambda_kld = LAMBDA_KLD, # antara 0.01-0.5
-    learningrate_student = STUDENT_LRATE,
-    batchnorm_epsilon = BATCH_NORM_EPSILON
-)
-
-transferlearning_model = transferlearning_model.to(device)
-training_result = training_sequence(
-    transferlearning_model, 
-    train_dataloader, 
-    valid_dataloader, 
-    NUM_EPOCHS,
-    run_name = 'trf-lrn-experiment-xlmr-epoch10-batchsize8-lamdakld0.5',
-    huggingface_token=HF_TOKEN,
-    save_model = False,
-    upload_model = True
-    )
-
+if __name__ == "__main__":
+    main(sys.argv[1:])
