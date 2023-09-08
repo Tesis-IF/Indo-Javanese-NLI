@@ -58,27 +58,27 @@ NUM_CORES = os.cpu_count() - 2
 
 # In[4]:
 
+def PrepareDataset():
+    # Preparing dataset
+    print("Preparing dataset...")
+    if not os.path.exists("datasets/"):
+        os.makedirs("datasets/")
 
-# Preparing dataset
-print("Preparing dataset...")
-if not os.path.exists("datasets/"):
-  os.makedirs("datasets/")
+    # Download dataset
+    print("Downloading training data...")
+    uri = "https://drive.google.com/uc?id=1j5iclahnkuk_jCZS12ZB9a4QN_XAJ9pt"
+    output = "datasets/train.csv"
+    gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
-# Download dataset
-print("Downloading training data...")
-uri = "https://drive.google.com/uc?id=1j5iclahnkuk_jCZS12ZB9a4QN_XAJ9pt"
-output = "datasets/train.csv"
-gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
+    print("Downloading validation data...")
+    uri = "https://drive.google.com/uc?id=1A4M8uS3bl__-Jugq11cOCAXdvXdMKBju"
+    output = "datasets/validation.csv"
+    gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
-print("Downloading validation data...")
-uri = "https://drive.google.com/uc?id=1A4M8uS3bl__-Jugq11cOCAXdvXdMKBju"
-output = "datasets/validation.csv"
-gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
-
-print("Downloading testing data...")
-uri = "https://drive.google.com/uc?id=1h011UmkFi9gM1yGEicizrGAUxgmPI1TP"
-output = "datasets/test.csv"
-gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
+    print("Downloading testing data...")
+    uri = "https://drive.google.com/uc?id=1h011UmkFi9gM1yGEicizrGAUxgmPI1TP"
+    output = "datasets/test.csv"
+    gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
 
 # In[5]:
@@ -107,98 +107,73 @@ print(f"GPU used: {device}")
 
 # In[8]:
 
+def LoadDataset():
+    df_train = pd.read_csv("datasets/train.csv", sep='\t')
+    df_train = df_train.sample(frac=1).reset_index(drop=True) #shuffle the data
 
-df_train = pd.read_csv("datasets/train.csv", sep='\t')
-df_train = df_train.sample(frac=1).reset_index(drop=True) #shuffle the data
+    df_train_student = pd.DataFrame()
+    df_train_student["premise"] = df_train["premise"]
+    df_train_student["hypothesis"] = df_train["jv_hypothesis_mongo"]
+    df_train_student["label"] = df_train["label"]
+    df_train_student.head()
 
-df_train_student = pd.DataFrame()
-df_train_student["premise"] = df_train["premise"]
-df_train_student["hypothesis"] = df_train["jv_hypothesis_mongo"]
-df_train_student["label"] = df_train["label"]
-df_train_student.head()
+    df_valid = pd.read_csv("datasets/validation.csv", sep='\t')
+    df_valid = df_valid.sample(frac=1).reset_index(drop=True) #shuffle the data
 
-
-# In[9]:
-
-
-df_valid = pd.read_csv("datasets/validation.csv", sep='\t')
-df_valid = df_valid.sample(frac=1).reset_index(drop=True) #shuffle the data
-
-df_valid_student = pd.DataFrame()
-df_valid_student["premise"] = df_valid["premise"]
-df_valid_student["hypothesis"] = df_valid["jv_hypothesis_mongo"]
-df_valid_student["label"] = df_valid["label"]
-df_valid_student.head()
+    df_valid_student = pd.DataFrame()
+    df_valid_student["premise"] = df_valid["premise"]
+    df_valid_student["hypothesis"] = df_valid["jv_hypothesis_mongo"]
+    df_valid_student["label"] = df_valid["label"]
+    df_valid_student.head()
 
 
-# In[10]:
+    df_test = pd.read_csv("datasets/test.csv", sep='\t')
+    df_test = df_test.sample(frac=1).reset_index(drop=True) #shuffle the data
+
+    df_test_student = pd.DataFrame()
+    df_test_student["premise"] = df_test["premise"]
+    df_test_student["premise"] = df_test_student["premise"].astype(str)
+    df_test_student["hypothesis"] = df_test["jv_hypothesis"]
+    df_test_student["hypothesis"] = df_test_student["hypothesis"].astype(str)
+    df_test_student["label"] = df_test["label"]
+    df_test_student.head()
 
 
-df_test = pd.read_csv("datasets/test.csv", sep='\t')
-df_test = df_test.sample(frac=1).reset_index(drop=True) #shuffle the data
+    # Prepare Dataset for Teacher
+    # Dataset from teacher will be from "IndoNLI", and using Indonesian only.
 
-df_test_student = pd.DataFrame()
-df_test_student["premise"] = df_test["premise"]
-df_test_student["premise"] = df_test_student["premise"].astype(str)
-df_test_student["hypothesis"] = df_test["jv_hypothesis"]
-df_test_student["hypothesis"] = df_test_student["hypothesis"].astype(str)
-df_test_student["label"] = df_test["label"]
-df_test_student.head()
+    df_train_t = pd.DataFrame()
+    df_train_t["premise"] = df_train["premise"]
+    df_train_t["hypothesis"] = df_train["hypothesis"]
+    df_train_t["label"] = df_train["label"]
+    df_train_t = df_train_t.sample(frac=1).reset_index(drop=True)
 
-
-# Prepare Dataset for Teacher
-
-# Dataset from teacher will be from "IndoNLI", and using Indonesian only.
-
-# In[11]:
+    print("Count per class train:") 
+    print(df_train_t['label'].value_counts())
 
 
-df_train_t = pd.DataFrame()
-df_train_t["premise"] = df_train["premise"]
-df_train_t["hypothesis"] = df_train["hypothesis"]
-df_train_t["label"] = df_train["label"]
-df_train_t = df_train_t.sample(frac=1).reset_index(drop=True)
+    df_valid_t = pd.DataFrame()
+    df_valid_t["premise"] = df_valid["premise"]
+    df_valid_t["hypothesis"] = df_valid["hypothesis"]
+    df_valid_t["label"] = df_valid["label"]
+    df_valid_t = df_valid_t.sample(frac=1).reset_index(drop=True)
 
 
-# In[12]:
+    print("Count per class valid:") 
+    print(df_valid_t['label'].value_counts())
 
 
-print("Count per class train:") 
-print(df_train_t['label'].value_counts())
+    df_test_t = pd.DataFrame()
+    df_test_t["premise"] = df_test["premise"]
+    df_test_t["hypothesis"] = df_test["hypothesis"]
+    df_test_t["label"] = df_test["label"]
+    df_test_t = df_test_t.sample(frac=1).reset_index(drop=True)
 
 
-# In[13]:
+    print("Count per class test:") 
+    print(df_test_t['label'].value_counts())
 
-
-df_valid_t = pd.DataFrame()
-df_valid_t["premise"] = df_valid["premise"]
-df_valid_t["hypothesis"] = df_valid["hypothesis"]
-df_valid_t["label"] = df_valid["label"]
-df_valid_t = df_valid_t.sample(frac=1).reset_index(drop=True)
-
-
-# In[14]:
-
-
-print("Count per class valid:") 
-print(df_valid_t['label'].value_counts())
-
-
-# In[15]:
-
-
-df_test_t = pd.DataFrame()
-df_test_t["premise"] = df_test["premise"]
-df_test_t["hypothesis"] = df_test["hypothesis"]
-df_test_t["label"] = df_test["label"]
-df_test_t = df_test_t.sample(frac=1).reset_index(drop=True)
-
-
-# In[16]:
-
-
-print("Count per class test:") 
-print(df_test_t['label'].value_counts())
+    return df_train_t, df_train_student, df_valid_t, df_valid_student, df_test_t, df_test_student
 
 
 # In[17]:
@@ -636,7 +611,7 @@ def training_sequence(the_model,
         project="javanese_nli",
         notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
         name=run_name,
-        tags=["transferlearning", "bandyopadhyay", "bertkld", "bert-kld", "xlmr"]
+        tags=["transferlearning", "bandyopadhyay", "bertkld", "bert-kld", "xlmr", "xlmr-kld"]
     )
     
     pbar_format = "{l_bar}{bar} | Epoch: {n:.2f}/{total_fmt} [{elapsed}<{remaining}]"
@@ -736,6 +711,9 @@ def main(argv):
         if USED_MODEL.lower() not in ("xlmr", "mbert"):
             print(f'{USED_MODEL} not recognized. Please enter "XLMR" or "MBERT" as model used.')
             sys.exit()
+
+        PrepareDataset()
+        df_train_t, df_train_student, df_valid_t, df_valid_student, df_test_t, df_test_student = LoadDataset()
 
         if USED_MODEL.lower() == "xlmr":
             TOKENIZER_TYPE = 'xlm-roberta-base'
