@@ -704,7 +704,7 @@ def main(argv):
         elif opt in ("-s", "--std_lr"):
             STUDENT_LRATE = int(arg)
         elif opt in ("-l", "--lambda_kld"):
-            LAMBDA_KLD = int(arg)
+            LAMBDA_KLD = float(arg)
         elif opt in ("-u", "--used_model"):
             USED_MODEL = str(arg)
         
