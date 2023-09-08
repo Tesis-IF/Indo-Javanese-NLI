@@ -675,7 +675,7 @@ def testing_sequence(
 def main(argv):
     opts, args = getopt.getopt(argv,"h:b:e:m:s:l:u:", ["help", "batch_size=", "max_len=", "std_lr=", "epoch=", "lambda_kld=", "used_model="])
 
-    STUDENT_LRATE = 2e-5
+    STUDENT_LRATE = 3e-6
     LAMBDA_KLD = 0.5 # between 0.01 - 0.5
     MAX_LEN = 512
     NUM_EPOCHS = 3
@@ -702,9 +702,9 @@ def main(argv):
         elif opt in ("-m", "--max_len"):
             MAX_LEN = int(arg)
         elif opt in ("-s", "--std_lr"):
-            STUDENT_LRATE = int(arg)
+            STUDENT_LRATE = float(str(arg))
         elif opt in ("-l", "--lambda_kld"):
-            LAMBDA_KLD = float(arg)
+            LAMBDA_KLD = float(str(arg))
         elif opt in ("-u", "--used_model"):
             USED_MODEL = str(arg)
         
@@ -712,74 +712,81 @@ def main(argv):
             print(f'{USED_MODEL} not recognized. Please enter "XLMR" or "MBERT" as model used.')
             sys.exit()
 
-        PrepareDataset()
-        df_train_t, df_train_student, df_valid_t, df_valid_student, df_test_t, df_test_student = LoadDataset()
+    PrepareDataset()
+    df_train_t, df_train_student, df_valid_t, df_valid_student, df_test_t, df_test_student = LoadDataset()
 
-        if USED_MODEL.lower() == "xlmr":
-            TOKENIZER_TYPE = 'xlm-roberta-base'
-            MBERT_TYPE = 'xlm-roberta-base'
-            the_tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
-        elif USED_MODEL.lower() == "mbert":
-            TOKENIZER_TYPE = 'bert-base-multilingual-cased'
-            MBERT_TYPE = 'bert-base-multilingual-cased' #'xlm-roberta-base'
-            the_tokenizer = BertTokenizer.from_pretrained(TOKENIZER_TYPE)
-        
-        train_data_cmp = CompDataset(df_train_t, df_train_student, MAX_LEN, the_tokenizer)
-        valid_data_cmp = CompDataset(df_valid_t, df_valid_student, MAX_LEN, the_tokenizer)
-        test_data_cmp = CompDataset(df_test_t, df_test_student, MAX_LEN, the_tokenizer)
+    if USED_MODEL.lower() == "xlmr":
+        TOKENIZER_TYPE = 'xlm-roberta-base'
+        MBERT_TYPE = 'xlm-roberta-base'
+        the_tokenizer = XLMRobertaTokenizer.from_pretrained(TOKENIZER_TYPE)
+    elif USED_MODEL.lower() == "mbert":
+        TOKENIZER_TYPE = 'bert-base-multilingual-cased'
+        MBERT_TYPE = 'bert-base-multilingual-cased' #'xlm-roberta-base'
+        the_tokenizer = BertTokenizer.from_pretrained(TOKENIZER_TYPE)
+    
+    train_data_cmp = CompDataset(df_train_t, df_train_student, MAX_LEN, the_tokenizer)
+    valid_data_cmp = CompDataset(df_valid_t, df_valid_student, MAX_LEN, the_tokenizer)
+    test_data_cmp = CompDataset(df_test_t, df_test_student, MAX_LEN, the_tokenizer)
 
-        train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
-        valid_dataloader = DataLoader(valid_data_cmp, batch_size = BATCH_SIZE)
-        test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
+    train_dataloader = DataLoader(train_data_cmp, batch_size = BATCH_SIZE)
+    valid_dataloader = DataLoader(valid_data_cmp, batch_size = BATCH_SIZE)
+    test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
 
-        print(f"Percobaan - Epoch {NUM_EPOCHS} Learning Rate Student {STUDENT_LRATE}, Batch size {BATCH_SIZE}, Lambda KLD: {LAMBDA_KLD}")
+    print(f"Percobaan - Epoch {NUM_EPOCHS} Learning Rate Student {STUDENT_LRATE}, Batch size {BATCH_SIZE}, Lambda KLD: {LAMBDA_KLD}")
 
-        config = PretrainedConfig(
-            problem_type = "single_label_classification",
-            id2label = {
-                "0": "ENTAIL",
-                "1": "NEUTRAL",
-                "2": "CONTRADICTION"
-            },
-            label2id = {
-                "ENTAIL": 0,
-                "NEUTRAL": 1,
-                "CONTRADICTION": 2
-            },
-            num_labels = 3,
-            hidden_size = 768,
-            name_or_path = "indojavanesenli-transfer-learning-xlmr",
-            finetuning_task = "indonesian-javanese natural language inference"
+    config = PretrainedConfig(
+        problem_type = "single_label_classification",
+        id2label = {
+            "0": "ENTAIL",
+            "1": "NEUTRAL",
+            "2": "CONTRADICTION"
+        },
+        label2id = {
+            "ENTAIL": 0,
+            "NEUTRAL": 1,
+            "CONTRADICTION": 2
+        },
+        num_labels = 3,
+        hidden_size = 768,
+        name_or_path = "indojavanesenli-transfer-learning-xlmr",
+        finetuning_task = "indonesian-javanese natural language inference"
+    )
+    
+    transferlearning_model = TransferLearningPaper(
+        config = config,
+        lambda_kld = LAMBDA_KLD, # between 0.01-0.5
+        learningrate_student = STUDENT_LRATE,
+        tokenizer = the_tokenizer,
+        mbert_type = MBERT_TYPE,
+        batchnorm_epsilon = BATCH_NORM_EPSILON
+    )
+
+    transferlearning_model = transferlearning_model.to(device)
+
+    training_result = training_sequence(
+        transferlearning_model, 
+        train_dataloader, 
+        valid_dataloader, 
+        NUM_EPOCHS, 
+        BATCH_SIZE,
+        run_name = f'trf-lrn-experiment-xlmr-epoch{NUM_EPOCHS}-batchsize{BATCH_SIZE}-lamdakld{LAMBDA_KLD}-lrate{STUDENT_LRATE}',
+        huggingface_token=HF_TOKEN,
+        save_model = False,
+        upload_model = True
         )
-        
-        transferlearning_model = TransferLearningPaper(
-            config = config,
-            lambda_kld = LAMBDA_KLD, # between 0.01-0.5
-            learningrate_student = STUDENT_LRATE,
-            tokenizer = the_tokenizer,
-            mbert_type = MBERT_TYPE,
-            batchnorm_epsilon = BATCH_NORM_EPSILON
-        )
+    
+    testing_result = testing_sequence(
+        transferlearning_model, 
+        test_dataloader,
+        BATCH_SIZE
+    )
 
-        transferlearning_model = transferlearning_model.to(device)
+    wandb.finish()
 
-        training_result = training_sequence(
-            transferlearning_model, 
-            train_dataloader, 
-            valid_dataloader, 
-            NUM_EPOCHS, 
-            BATCH_SIZE,
-            run_name = f'trf-lrn-experiment-xlmr-epoch{NUM_EPOCHS}-batchsize{BATCH_SIZE}-lamdakld{LAMBDA_KLD}',
-            huggingface_token=HF_TOKEN,
-            save_model = False,
-            upload_model = True
-            )
-        
-        testing_result = testing_sequence(
-            transferlearning_model, 
-            test_dataloader,
-            BATCH_SIZE
-        )
+    print("================================================================")
+    print("Done training & testing.")
+    print("================================================================")
+    sys.exit()
 
 
 # In[26]:
