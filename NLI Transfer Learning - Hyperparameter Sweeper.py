@@ -46,6 +46,24 @@ from huggingface_hub import login, logout
 
 # In[3]:
 
+# check .env file
+current_directory = os.getcwd()
+filename = ".env"
+
+current_directory = current_directory.replace("\\", "/")
+full_path_to_filename = os.path.join(current_directory, filename)
+
+if (os.path.exists(full_path_to_filename)):
+    # Clear the terminal screen
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("File env checked.")
+else:
+    # Clear the terminal screen
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(f"File {filename} not exist!")
+    print(f"Please put {filename} to the same directory as this python file. Please ask Mr. Jalaluddin for {filename} file.")
+    sys.exit()
+
 TOKENIZER_TYPE = 'xlm-roberta-base'
 MBERT_TYPE = 'xlm-roberta-base'
 MODEL_TEACHER_TYPE = 'jalaluddin94/xlmr-nli-indoindo'
@@ -82,21 +100,14 @@ def PrepareDataset():
     output = "datasets/test.csv"
     gdown.download(url=uri, output=output, quiet=False, fuzzy=True)
 
-
 # In[5]:
-
-
-wandb.login(key=config('API_KEY_WANDB_JALAL'))
-
-
-# In[6]:
 
 
 os.environ["WANDB_AGENT_MAX_INITIAL_FAILURES"]="1024"
 os.environ["WANDB_AGENT_DISABLE_FLAPPING"]="true"
 
 
-# In[7]:
+# In[6]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -107,7 +118,7 @@ print(f"GPU used: {device}")
 
 # Prepare Dataset for Student
 
-# In[8]:
+# In[7]:
 
 def LoadDataset():
     df_train = pd.read_csv("datasets/train.csv", sep='\t')
@@ -178,7 +189,7 @@ def LoadDataset():
     return df_train_t, df_train_student, df_valid_t, df_valid_student, df_test_t, df_test_student
 
 
-# In[17]:
+# In[8]:
 
 
 class CompDataset(Dataset):
@@ -252,7 +263,7 @@ class CompDataset(Dataset):
 
 # Transfer Learning model as per Bandyopadhyay, D., et al (2022) paper, but using XLMR instead of mBERT
 
-# In[18]:
+# In[9]:
 
 
 class TransferLearningPaper(PreTrainedModel):
@@ -390,7 +401,7 @@ class TransferLearningPaper(PreTrainedModel):
 
 # ## Training
 
-# In[19]:
+# In[10]:
 
 
 gc.collect()
@@ -398,7 +409,7 @@ gc.collect()
 
 # Function to compute metrics
 
-# In[20]:
+# In[11]:
 
 
 def compute_metrics(p):
@@ -413,15 +424,11 @@ def compute_metrics(p):
 
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1_score": f1}
 
-
-# Manual training function
-
-# In[21]:
-
+# In[12]:
 
 def train(the_model, train_data, pgb, batch_size):
     the_model.train()
-    
+
     batch_loss = 0
     
     for batch, data in enumerate(train_data):
@@ -469,7 +476,7 @@ def train(the_model, train_data, pgb, batch_size):
     return training_loss
 
 
-# In[22]:
+# In[13]:
 
 
 def validate(the_model, valid_data, batch_size):
@@ -531,7 +538,7 @@ def validate(the_model, valid_data, batch_size):
     
     return eval_loss, out_metrics
 
-# In[23]:
+# In[14]:
 
 
 def test(the_model, test_data, batch_size):
@@ -594,8 +601,7 @@ def test(the_model, test_data, batch_size):
     return eval_loss, out_metrics
 
 
-# In[23]:
-
+# In[15]:
 
 def training_sequence(the_model, 
                       train_data, 
@@ -608,13 +614,6 @@ def training_sequence(the_model,
                       upload_model=True):
     track_train_loss = []
     track_val_loss = []
-
-    run = wandb.init(
-        project="javanese_nli",
-        notes="Experiment transfer learning on Bandyopadhyay's paper using XLMR",
-        name=run_name,
-        tags=["transferlearning", "bandyopadhyay", "bertkld", "bert-kld", "xlmr", "xlmr-kld"]
-    )
     
     pbar_format = "{l_bar}{bar} | Epoch: {n:.2f}/{total_fmt} [{elapsed}<{remaining}]"
     with tqdm(total=epochs, colour="blue", leave=True, position=0, bar_format=pbar_format) as t:
@@ -651,7 +650,7 @@ def training_sequence(the_model,
         "validation_loss": track_val_loss
     }
 
-# In[24]:
+# In[16]:
 
 def testing_sequence(
         the_model,
@@ -671,21 +670,122 @@ def testing_sequence(
         "testing_loss": track_test_loss
     }
 
+# In[17]:
 
-# In[25]:
+def configure_sweep():
+    print("Configuring wandb hyperparameters sweep...")
+
+    wandb.login(key=config('API_KEY_WANDB_JALAL'))
+
+    # method
+    sweep_config = {
+        'method': 'grid',
+        'name': 'sweep-transferlearning-experiment-distillation'
+    }
+
+    # hyperparameters
+    parameters_dict = {
+        'epochs': {'values': [6, 10]},
+        'learning_rate': {'values': [2e-5, 3e-6]},
+        'lambda_kld': {'values': [0.5, 0.25, 0.1, 0.075, 0.05, 0.025, 0.01]}, # between 0.01-0.5
+        'batch_size': {'values': [2, 8, 16, 32]}
+    }
+
+    # metrics
+    metrics_goal = {
+        'goal': 'maximize',
+        'name': 'f1_score'
+    }
+
+    sweep_config['parameters'] = parameters_dict
+    sweep_config['metric'] = metrics_goal
+
+    sweep_id = wandb.sweep(sweep_config, project='javanese_nli')
+
+    return sweep_id, sweep_config
+# In[18]:
+
+def start_sweeping_seq(
+        tok,
+        mberttype,
+        b_norm_eps,
+        train_dataloader,
+        valid_dataloader,
+        test_dataloader,
+        configs=None
+    ):
+
+    print("Starting hyperparameters sweep sequence...")
+
+    with wandb.init(
+        config=configs,
+        project="javanese_nli",
+        name=f"sweep-xlmr-kld",
+        tags=["transferlearning", "bandyopadhyay"]
+    ):
+        # set sweep configuration
+        configs = wandb.config #if configs is None else configs
+
+        print("Wandb Sweep Configuration:", configs)
+        
+        config_pretrained_model = PretrainedConfig(
+            problem_type = "single_label_classification",
+            id2label = {
+                "0": "ENTAIL",
+                "1": "NEUTRAL",
+                "2": "CONTRADICTION"
+            },
+            label2id = {
+                "ENTAIL": 0,
+                "NEUTRAL": 1,
+                "CONTRADICTION": 2
+            },
+            num_labels = 3,
+            hidden_size = 768,
+            name_or_path = "indojavanesenli-transfer-learning-xlmr",
+            finetuning_task = "indonesian-javanese natural language inference"
+        )
+
+        print(config_pretrained_model)
+
+        transferlearning_model = TransferLearningPaper(
+            configs = config_pretrained_model,
+            lambda_kld = configs.lambda_kld, # between 0.01-0.5
+            learningrate_student = configs.learning_rate,
+            tokenizer = tok,
+            mbert_type = mberttype,
+            batchnorm_epsilon = b_norm_eps
+        )
+        transferlearning_model = transferlearning_model.to(device)
+
+        training_result = training_sequence(
+            transferlearning_model, 
+            train_dataloader, 
+            valid_dataloader, 
+            configs.epochs, 
+            configs.batch_size,
+            run_name = f'trf-lrn-experiment-{mberttype}-epoch{configs.epochs}-batchsize{configs.batch_size}-lamdakld{configs.lambda_kld}-lrate{configs.learning_rate}',
+            huggingface_token=HF_TOKEN,
+            save_model = False,
+            upload_model = True
+            )
+        
+        testing_result = testing_sequence(
+            transferlearning_model, 
+            test_dataloader,
+            configs.batch_size
+        )
+
+
+# In[19]:
 
 def main(argv):
-    opts, args = getopt.getopt(argv,"h:b:e:m:s:l:u:", ["help", "batch_size=", "max_len=", "std_lr=", "epoch=", "lambda_kld=", "used_model="])
+    opts, args = getopt.getopt(argv,"h:b:e:m:s:l:u:", ["help", "max_len=", "max_length=", "used_model="])
 
-    STUDENT_LRATE = 3e-6
-    LAMBDA_KLD = 0.5 # between 0.01 - 0.5
     MAX_LEN = 512
-    NUM_EPOCHS = 3
     BATCH_SIZE = 8
     BATCH_NORM_EPSILON = 1e-5
     USED_MODEL = "XLMR"
-    LAMBDA_L2 = 3e-5
-
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -694,19 +794,11 @@ def main(argv):
                 filename = '"' + filename[0:len(filename)] + '"'
             
             print("To run Transfer Learning experiment for IndoJavaneseNLI, please run the following command:")
-            print("python " + filename + " --epoch=NUM_EPOCH --batch_size=BATCH_SIZE --max_len=MAX_LENGTH --std_lr=STUDENT_LEARNING_RATE --lambda_kld=LAMBDA_KLD")
+            print("python " + filename + " --max_len=MAX_LENGTH")
             sys.exit()
 
-        elif opt in ("-b","--batch_size"):
-            BATCH_SIZE = int(arg)
-        elif opt in ("-e", "--epoch"):
-            NUM_EPOCHS = int(arg)
-        elif opt in ("-m", "--max_len"):
+        elif opt in ("-m", "--max_len", "max_length"):
             MAX_LEN = int(arg)
-        elif opt in ("-s", "--std_lr"):
-            STUDENT_LRATE = float(str(arg))
-        elif opt in ("-l", "--lambda_kld"):
-            LAMBDA_KLD = float(str(arg))
         elif opt in ("-u", "--used_model"):
             USED_MODEL = str(arg)
         
@@ -734,64 +826,27 @@ def main(argv):
     valid_dataloader = DataLoader(valid_data_cmp, batch_size = BATCH_SIZE)
     test_dataloader = DataLoader(test_data_cmp, batch_size = BATCH_SIZE)
 
-    print(f"Percobaan - Epoch {NUM_EPOCHS} Learning Rate Student {STUDENT_LRATE}, Batch size {BATCH_SIZE}, Lambda KLD: {LAMBDA_KLD}")
+    swp_id, swp_conf = configure_sweep()
 
-    model_config = PretrainedConfig(
-        problem_type = "single_label_classification",
-        id2label = {
-            "0": "ENTAIL",
-            "1": "NEUTRAL",
-            "2": "CONTRADICTION"
-        },
-        label2id = {
-            "ENTAIL": 0,
-            "NEUTRAL": 1,
-            "CONTRADICTION": 2
-        },
-        num_labels = 3,
-        hidden_size = 768,
-        name_or_path = "indojavanesenli-transfer-learning-xlmr",
-        finetuning_task = "indonesian-javanese natural language inference"
-    )
-    
-    transferlearning_model = TransferLearningPaper(
-        configs = model_config,
-        lambda_kld = LAMBDA_KLD, # between 0.01-0.5
-        learningrate_student = STUDENT_LRATE,
-        tokenizer = the_tokenizer,
-        mbert_type = MBERT_TYPE,
-        batchnorm_epsilon = BATCH_NORM_EPSILON
-    )
-
-    transferlearning_model = transferlearning_model.to(device)
-
-    training_result = training_sequence(
-        transferlearning_model, 
-        train_dataloader, 
-        valid_dataloader, 
-        NUM_EPOCHS, 
-        BATCH_SIZE,
-        run_name = f'trf-lrn-experiment-xlmr-epoch{NUM_EPOCHS}-batchsize{BATCH_SIZE}-lamdakld{LAMBDA_KLD}-lrate{STUDENT_LRATE}',
-        huggingface_token=HF_TOKEN,
-        save_model = False,
-        upload_model = True
+    print("Wandb Sweep ID:", swp_id)
+    sweep_function = lambda: start_sweeping_seq(
+            tok=the_tokenizer,
+            mberttype=MBERT_TYPE,
+            b_norm_eps=BATCH_NORM_EPSILON,
+            train_dataloader=train_dataloader,
+            valid_dataloader=valid_dataloader,
+            test_dataloader=test_dataloader
         )
-    
-    testing_result = testing_sequence(
-        transferlearning_model, 
-        test_dataloader,
-        BATCH_SIZE
+
+    wandb.agent(
+        swp_id,
+        sweep_function
     )
 
     wandb.finish()
 
-    print("================================================================")
-    print("Done training & testing.")
-    print("================================================================")
-    sys.exit()
 
-
-# In[26]:
+# In[20]:
 
 if __name__ == "__main__":
     main(sys.argv[1:])
