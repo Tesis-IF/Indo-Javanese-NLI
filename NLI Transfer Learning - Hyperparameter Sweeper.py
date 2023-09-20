@@ -794,7 +794,7 @@ def main(argv):
                 filename = '"' + filename[0:len(filename)] + '"'
             
             print("To run Transfer Learning experiment for IndoJavaneseNLI, please run the following command:")
-            print("python " + filename + " --max_len=MAX_LENGTH")
+            print("python " + filename + " --max_len=MAX_LENGTH --used_model=MBERT/XLMR")
             sys.exit()
 
         elif opt in ("-m", "--max_len", "max_length"):
