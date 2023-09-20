@@ -686,9 +686,9 @@ def configure_sweep():
     # hyperparameters
     parameters_dict = {
         'epochs': {'values': [6, 10]},
-        'learning_rate': {'values': [2e-5, 3e-6]},
-        'lambda_kld': {'values': [0.5, 0.25, 0.1, 0.075, 0.05, 0.025, 0.01]}, # between 0.01-0.5
-        'batch_size': {'values': [2, 8, 16, 32]}
+        'learning_rate': {'values': [2e-4, 3e-6]},
+        'lambda_kld': {'values': [0.5, 0.015]}, # between 0.01-0.5
+        'batch_size': {'values': [2, 8]}
     }
 
     # metrics
