@@ -680,7 +680,7 @@ def configure_sweep():
     # method
     sweep_config = {
         'method': 'grid',
-        'name': 'sweep-transferlearning-experiment-distillation'
+        'name': 'sweep-transferlearning-experiment-xlmr-distillation'
     }
 
     # hyperparameters
@@ -694,7 +694,7 @@ def configure_sweep():
     # metrics
     metrics_goal = {
         'goal': 'maximize',
-        'name': 'f1_score'
+        'name': 'test/f1_score'
     }
 
     sweep_config['parameters'] = parameters_dict
@@ -720,7 +720,6 @@ def start_sweeping_seq(
     with wandb.init(
         config=configs,
         project="javanese_nli",
-        name=f"sweep-xlmr-kld",
         tags=["transferlearning", "bandyopadhyay"]
     ):
         # set sweep configuration
