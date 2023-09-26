@@ -688,7 +688,7 @@ def configure_sweep():
         'epochs': {'values': [6, 10]},
         'learning_rate': {'values': [2e-4, 3e-6]},
         'lambda_kld': {'values': [0.5, 0.015]}, # between 0.01-0.5
-        'batch_size': {'values': [2, 8]}
+        'batch_size': {'values': [2, 16]}
     }
 
     # metrics
