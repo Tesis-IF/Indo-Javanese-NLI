@@ -1,2 +1,6 @@
 /datasets
 /wandb
+/__pycache__
+/logs
+/logger/logs
+/logger/__pycache__
