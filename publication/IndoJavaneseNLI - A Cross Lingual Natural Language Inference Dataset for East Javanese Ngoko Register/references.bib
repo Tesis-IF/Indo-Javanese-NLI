@@ -1,0 +1,389 @@
+@INPROCEEDINGS{Abdiansah2018,
+  author={Abdiansah, Abdiansah and Azhari, Azhari and Sari, Anny Kartika},
+  booktitle={2018 4th International Conference on Science and Technology (ICST)}, 
+  title={INARTE: An Indonesian Dataset for Recognition Textual Entailment}, 
+  year={2018},
+  volume={},
+  number={},
+  pages={1-5},
+  doi={10.1109/ICSTC.2018.8528283}
+}
+@misc{Loshchilov2019,
+      title={Decoupled Weight Decay Regularization}, 
+      author={Ilya Loshchilov and Frank Hutter},
+      year={2019},
+      eprint={1711.05101},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+@inproceedings{Agic2018,
+    title = "Baselines and Test Data for Cross-Lingual Inference",
+    author = "Agi{\'c}, {\v{Z}}eljko  and
+      Schluter, Natalie",
+    booktitle = "Proceedings of the Eleventh International Conference on Language Resources and Evaluation ({LREC} 2018)",
+    month = may,
+    year = "2018",
+    address = "Miyazaki, Japan",
+    publisher = "European Language Resources Association (ELRA)",
+    url = "https://aclanthology.org/L18-1614",
+}
+@inproceedings{Bowman2015,
+    title = "A large annotated corpus for learning natural language inference",
+    author = "Bowman, Samuel R.  and
+      Angeli, Gabor  and
+      Potts, Christopher  and
+      Manning, Christopher D.",
+    booktitle = "Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing",
+    month = sep,
+    year = "2015",
+    address = "Lisbon, Portugal",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D15-1075",
+    doi = "10.18653/v1/D15-1075",
+    pages = "632--642",
+}
+@inproceedings{Budur2020,
+    title = "Data and {R}epresentation for {T}urkish {N}atural {L}anguage {I}nference",
+    author = {Budur, Emrah  and
+      {\"O}z{\c{c}}elik, R{\i}za  and
+      Gungor, Tunga  and
+      Potts, Christopher},
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.emnlp-main.662",
+    doi = "10.18653/v1/2020.emnlp-main.662",
+    pages = "8253--8267",
+    abstract = "Large annotated datasets in NLP are overwhelmingly in English. This is an obstacle to progress in other languages. Unfortunately, obtaining new annotated resources for each task in each language would be prohibitively expensive. At the same time, commercial machine translation systems are now robust. Can we leverage these systems to translate English-language datasets automatically? In this paper, we offer a positive response for natural language inference (NLI) in Turkish. We translated two large English NLI datasets into Turkish and had a team of experts validate their translation quality and fidelity to the original labels. Using these datasets, we address core issues of representation for Turkish NLI. We find that in-language embeddings are essential and that morphological parsing can be avoided where the training set is large. Finally, we show that models trained on our machine-translated datasets are successful on human-translated evaluation sets. We share all code, models, and data publicly.",
+}
+@inproceedings{Conneau2018,
+    title = "{XNLI}: Evaluating Cross-lingual Sentence Representations",
+    author = "Conneau, Alexis  and
+      Rinott, Ruty  and
+      Lample, Guillaume  and
+      Williams, Adina  and
+      Bowman, Samuel  and
+      Schwenk, Holger  and
+      Stoyanov, Veselin",
+    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",
+    month = oct # "-" # nov,
+    year = "2018",
+    address = "Brussels, Belgium",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D18-1269",
+    doi = "10.18653/v1/D18-1269",
+    pages = "2475--2485",
+    abstract = "State-of-the-art natural language processing systems rely on supervision in the form of annotated data to learn competent models. These models are generally trained on data in a single language (usually English), and cannot be directly used beyond that language. Since collecting data in every language is not realistic, there has been a growing interest in cross-lingual language understanding (XLU) and low-resource cross-language transfer. In this work, we construct an evaluation set for XLU by extending the development and test sets of the Multi-Genre Natural Language Inference Corpus (MultiNLI) to 14 languages, including low-resource languages such as Swahili and Urdu. We hope that our dataset, dubbed XNLI, will catalyze research in cross-lingual sentence understanding by providing an informative standard evaluation task. In addition, we provide several baselines for multilingual sentence understanding, including two based on machine translation systems, and two that use parallel data to train aligned multilingual bag-of-words and LSTM encoders. We find that XNLI represents a practical and challenging evaluation suite, and that directly translating the test data yields the best performance among available baselines.",
+}
+@inproceedings{Conneau2020,
+    title = "Unsupervised Cross-lingual Representation Learning at Scale",
+    author = "Conneau, Alexis  and
+      Khandelwal, Kartikay  and
+      Goyal, Naman  and
+      Chaudhary, Vishrav  and
+      Wenzek, Guillaume  and
+      Guzm{\'a}n, Francisco  and
+      Grave, Edouard  and
+      Ott, Myle  and
+      Zettlemoyer, Luke  and
+      Stoyanov, Veselin",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.acl-main.747",
+    doi = "10.18653/v1/2020.acl-main.747",
+    pages = "8440--8451",
+    abstract = "This paper shows that pretraining multilingual language models at scale leads to significant performance gains for a wide range of cross-lingual transfer tasks. We train a Transformer-based masked language model on one hundred languages, using more than two terabytes of filtered CommonCrawl data. Our model, dubbed XLM-R, significantly outperforms multilingual BERT (mBERT) on a variety of cross-lingual benchmarks, including +14.6{\%} average accuracy on XNLI, +13{\%} average F1 score on MLQA, and +2.4{\%} F1 score on NER. XLM-R performs particularly well on low-resource languages, improving 15.7{\%} in XNLI accuracy for Swahili and 11.4{\%} for Urdu over previous XLM models. We also present a detailed empirical analysis of the key factors that are required to achieve these gains, including the trade-offs between (1) positive transfer and capacity dilution and (2) the performance of high and low resource languages at scale. Finally, we show, for the first time, the possibility of multilingual modeling without sacrificing per-language performance; XLM-R is very competitive with strong monolingual models on the GLUE and XNLI benchmarks. We will make our code and models publicly available.",
+}
+@InProceedings{Dagan2006,
+    author="Dagan, Ido
+    and Glickman, Oren
+    and Magnini, Bernardo",
+    editor="Qui{\~{n}}onero-Candela, Joaquin
+    and Dagan, Ido
+    and Magnini, Bernardo
+    and d'Alch{\'e}-Buc, Florence",
+    title="The PASCAL Recognising Textual Entailment Challenge",
+    booktitle="Machine Learning Challenges. Evaluating Predictive Uncertainty, Visual Object Classification, and Recognising Textual Entailment",
+    year="2006",
+    publisher="Springer Berlin Heidelberg",
+    address="Berlin, Heidelberg",
+    pages="177--190",
+    abstract="This paper describes the PASCAL Network of Excellence's first Recognising Textual Entailment (RTE-1) Challenge benchmark. The RTE task is defined as recognizing, given two text fragments, whether the meaning of one text can be inferred (entailed) from the other. This application-independent task is suggested as capturing major inferences about the variability of semantic expression which are commonly needed across multiple applications. The Challenge has raised noticeable attention in the research community, attracting 17 submissions from diverse groups, suggesting the generic relevance of the task.",
+    isbn="978-3-540-33428-6"
+}
+@inproceedings{Devlin2019,
+    title = "{BERT}: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+    author = "Devlin, Jacob  and
+      Chang, Ming-Wei  and
+      Lee, Kenton  and
+      Toutanova, Kristina",
+    booktitle = "Proceedings of the 2019 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers)",
+    month = jun,
+    year = "2019",
+    address = "Minneapolis, Minnesota",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/N19-1423",
+    doi = "10.18653/v1/N19-1423",
+    pages = "4171--4186",
+    abstract = "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models (Peters et al., 2018a; Radford et al., 2018), BERT is designed to pre-train deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers. As a result, the pre-trained BERT model can be fine-tuned with just one additional output layer to create state-of-the-art models for a wide range of tasks, such as question answering and language inference, without substantial task-specific architecture modifications. BERT is conceptually simple and empirically powerful. It obtains new state-of-the-art results on eleven natural language processing tasks, including pushing the GLUE score to 80.5 (7.7 point absolute improvement), MultiNLI accuracy to 86.7{\%} (4.6{\%} absolute improvement), SQuAD v1.1 question answering Test F1 to 93.2 (1.5 point absolute improvement) and SQuAD v2.0 Test F1 to 83.1 (5.1 point absolute improvement).",
+}
+@online{Eberhard2023, 
+    author = "Eberhard and David, M. and Simons, Gary F. and Fennig, Charles D.",
+    year="2023",
+    title = "Ethnologue: Languages of the World",
+    url = "http://www.ethnologue.com",
+    note = "Accessed October 15th, 2023",
+}
+@inproceedings{Falke2019,
+    title = "Ranking Generated Summaries by Correctness: An Interesting but Challenging Application for Natural Language Inference",
+    author = "Falke, Tobias  and
+      Ribeiro, Leonardo F. R.  and
+      Utama, Prasetya Ajie  and
+      Dagan, Ido  and
+      Gurevych, Iryna",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P19-1213",
+    doi = "10.18653/v1/P19-1213",
+    pages = "2214--2220",
+    abstract = "While recent progress on abstractive summarization has led to remarkably fluent summaries, factual errors in generated summaries still severely limit their use in practice. In this paper, we evaluate summaries produced by state-of-the-art models via crowdsourcing and show that such errors occur frequently, in particular with more abstractive models. We study whether textual entailment predictions can be used to detect such errors and if they can be reduced by reranking alternative predicted summaries. That leads to an interesting downstream application for entailment models. In our experiments, we find that out-of-the-box entailment models trained on NLI datasets do not yet offer the desired performance for the downstream task and we therefore release our annotations as additional test data for future extrinsic evaluations of NLI.",
+}
+@inproceedings{Hedderich2021,
+    title = "A Survey on Recent Approaches for Natural Language Processing in Low-Resource Scenarios",
+    author = {Hedderich, Michael A.  and
+      Lange, Lukas  and
+      Adel, Heike  and
+      Str{\"o}tgen, Jannik  and
+      Klakow, Dietrich},
+    booktitle = "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.naacl-main.201",
+    doi = "10.18653/v1/2021.naacl-main.201",
+    pages = "2545--2568",
+    abstract = "Deep neural networks and huge language models are becoming omnipresent in natural language applications. As they are known for requiring large amounts of training data, there is a growing body of work to improve the performance in low-resource settings. Motivated by the recent fundamental changes towards neural models and the popular pre-train and fine-tune paradigm, we survey promising approaches for low-resource natural language processing. After a discussion about the different dimensions of data availability, we give a structured overview of methods that enable learning when training data is sparse. This includes mechanisms to create additional labeled data like data augmentation and distant supervision as well as transfer learning settings that reduce the need for target supervision. A goal of our survey is to explain how these methods differ in their requirements as understanding them is essential for choosing a technique suited for a specific low-resource setting. Further key aspects of this work are to highlight open issues and to outline promising directions for future research.",
+}
+@inproceedings{Hu2020,
+    title = "{OCNLI}: {O}riginal {C}hinese {N}atural {L}anguage {I}nference",
+    author = {Hu, Hai  and
+      Richardson, Kyle  and
+      Xu, Liang  and
+      Li, Lu  and
+      K{\"u}bler, Sandra  and
+      Moss, Lawrence},
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2020",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.findings-emnlp.314",
+    doi = "10.18653/v1/2020.findings-emnlp.314",
+    pages = "3512--3526",
+    abstract = "Despite the tremendous recent progress on natural language inference (NLI), driven largely by large-scale investment in new datasets (e.g.,SNLI, MNLI) and advances in modeling, most progress has been limited to English due to a lack of reliable datasets for most of the world{'}s languages. In this paper, we present the first large-scale NLI dataset (consisting of {\textasciitilde}56,000 annotated sentence pairs) for Chinese called the Original Chinese Natural Language Inference dataset (OCNLI). Unlike recent attempts at extending NLI to other languages, our dataset does not rely on any automatic translation or non-expert annotation. Instead, we elicit annotations from native speakers specializing in linguistics. We follow closely the annotation protocol used for MNLI, but create new strategies for eliciting diverse hypotheses. We establish several baseline results on our dataset using state-of-the-art pre-trained models for Chinese, and find even the best performing models to be far outpaced by human performance ({\textasciitilde}12{\%} absolute performance gap), making it a challenging new resource that we hope will help to accelerate progress in Chinese NLU. To the best of our knowledge, this is the first human-elicited MNLI-style corpus for a non-English language.",
+}
+@inproceedings{Krysci2020,
+    title = "Evaluating the Factual Consistency of Abstractive Text Summarization",
+    author = "Kryscinski, Wojciech  and
+      McCann, Bryan  and
+      Xiong, Caiming  and
+      Socher, Richard",
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.emnlp-main.750",
+    doi = "10.18653/v1/2020.emnlp-main.750",
+    pages = "9332--9346",
+    abstract = "The most common metrics for assessing summarization algorithms do not account for whether summaries are factually consistent with source documents. We propose a weakly-supervised, model-based approach for verifying factual consistency and identifying conflicts between source documents and generated summaries. Training data is generated by applying a series of rule-based transformations to the sentences of source documents. The factual consistency model is then trained jointly for three tasks: 1) predict whether each summary sentence is factually consistent or not, 2) in either case, extract a span in the source document to support this consistency prediction, 3) for each summary sentence that is deemed inconsistent, extract the inconsistent span from it. Transferring this model to summaries generated by several neural models reveals that this highly scalable approach outperforms previous models, including those trained with strong supervision using datasets from related domains, such as natural language inference and fact-checking. Additionally, human evaluation shows that the auxiliary span extraction tasks provide useful assistance in the process of verifying factual consistency. We also release a manually annotated dataset for factual consistency verification, code for training data generation, and trained model weights at \url{https://github.com/salesforce/factCC}.",
+}
+@inproceedings{loshchilov2019decoupled,
+      title={Decoupled Weight Decay Regularization}, 
+      author={Ilya Loshchilov and Frank Hutter},
+      year={2019},
+      booktitle="Proceedings of International Conference on Learning Representations (ICLR)",
+      eprint={1711.05101},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+@inproceedings{Mahendra2021,
+    title = "{I}ndo{NLI}: A Natural Language Inference Dataset for {I}ndonesian",
+    author = "Mahendra, Rahmad  and
+      Aji, Alham Fikri  and
+      Louvan, Samuel  and
+      Rahman, Fahrurrozi  and
+      Vania, Clara",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-main.821",
+    doi = "10.18653/v1/2021.emnlp-main.821",
+    pages = "10511--10527",
+    abstract = "We present IndoNLI, the first human-elicited NLI dataset for Indonesian. We adapt the data collection protocol for MNLI and collect {\textasciitilde}18K sentence pairs annotated by crowd workers and experts. The expert-annotated data is used exclusively as a test set. It is designed to provide a challenging test-bed for Indonesian NLI by explicitly incorporating various linguistic phenomena such as numerical reasoning, structural changes, idioms, or temporal and spatial reasoning. Experiment results show that XLM-R outperforms other pre-trained models in our data. The best performance on the expert-annotated data is still far below human performance (13.4{\%} accuracy gap), suggesting that this test set is especially challenging. Furthermore, our analysis shows that our expert-annotated data is more diverse and contains fewer annotation artifacts than the crowd-annotated data. We hope this dataset can help accelerate progress in Indonesian NLP research.",
+}
+@inproceedings{Mehdad2011,
+    title = "Using Bilingual Parallel Corpora for Cross-Lingual Textual Entailment",
+    author = "Mehdad, Yashar  and
+      Negri, Matteo  and
+      Federico, Marcello",
+    booktitle = "Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2011",
+    address = "Portland, Oregon, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P11-1134",
+    pages = "1336--1345",
+}
+@inproceedings{Negri2011,
+    title = "Divide and Conquer: Crowdsourcing the Creation of Cross-Lingual Textual Entailment Corpora",
+    author = "Negri, Matteo  and
+      Bentivogli, Luisa  and
+      Mehdad, Yashar  and
+      Giampiccolo, Danilo  and
+      Marchetti, Alessandro",
+    booktitle = "Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing",
+    month = jul,
+    year = "2011",
+    address = "Edinburgh, Scotland, UK.",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D11-1062",
+    pages = "670--679",
+}
+@inproceedings{Parikh2016,
+    title = "A Decomposable Attention Model for Natural Language Inference",
+    author = {Parikh, Ankur  and
+      T{\"a}ckstr{\"o}m, Oscar  and
+      Das, Dipanjan  and
+      Uszkoreit, Jakob},
+    booktitle = "Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2016",
+    address = "Austin, Texas",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/D16-1244",
+    doi = "10.18653/v1/D16-1244",
+    pages = "2249--2255",
+}
+@inbook{Paszke2017,
+author = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and K\"{o}pf, Andreas and Yang, Edward and DeVito, Zach and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+title = {PyTorch: An Imperative Style, High-Performance Deep Learning Library},
+year = {2019},
+publisher = {Curran Associates Inc.},
+address = {Red Hook, NY, USA},
+abstract = {Deep learning frameworks have often focused on either usability or speed, but not both. PyTorch is a machine learning library that shows that these two goals are in fact compatible: it provides an imperative and Pythonic programming style that supports code as a model, makes debugging easy and is consistent with other popular scientific computing libraries, while remaining efficient and supporting hardware accelerators such as GPUs.In this paper, we detail the principles that drove the implementation of PyTorch and how they are reflected in its architecture. We emphasize that every aspect of PyTorch is a regular Python program under the full control of its user. We also explain how the careful and pragmatic implementation of the key components of its runtime enables them to work together to achieve compelling performance. We demonstrate the efficiency of individual subsystems, as well as the overall speed of PyTorch on several common benchmarks.},
+booktitle = {Proceedings of the 33rd International Conference on Neural Information Processing Systems},
+articleno = {721},
+numpages = {12}
+}
+@InProceedings{Setya2018,
+author="Setya, Ken Nabila
+and Mahendra, Rahmad",
+editor="Gelbukh, Alexander",
+title="Semi-supervised Textual Entailment on Indonesian Wikipedia Data",
+booktitle="Computational Linguistics and Intelligent Text Processing",
+year="2023",
+publisher="Springer Nature Switzerland",
+address="Cham",
+pages="416--427",
+abstract="Recognizing Textual Entailment (RTE) is a research in Natural Language Processing that aims to identify whether there is an entailment relation between two texts. Textual Entailment has been studied in a variety of languages, but it is rare for the Indonesian language. The purpose of the work presented in this paper is to conduct the RTE experiment on Indonesian language dataset. Since manual data creation is costly and time consuming, we choose semi-supervised machine learning approach. We apply co-training algorithm to enlarge small amounts of annotated data, called seeds. With this method, the human effort only needed to annotate the seeds. The data resource used is all from Wikipedia and the entailment pairs are extracted from its revision history. Evaluation of 1,857 sentence pairs labelled with entailment information using our approach achieve accuracy 76{\%}.",
+isbn="978-3-031-23793-5"
+}
+@inproceedings{Welleck20019,
+    title = "Dialogue Natural Language Inference",
+    author = "Welleck, Sean  and
+      Weston, Jason  and
+      Szlam, Arthur  and
+      Cho, Kyunghyun",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P19-1363",
+    doi = "10.18653/v1/P19-1363",
+    pages = "3731--3741",
+    abstract = "Consistency is a long standing issue faced by dialogue models. In this paper, we frame the consistency of dialogue agents as natural language inference (NLI) and create a new natural language inference dataset called Dialogue NLI. We propose a method which demonstrates that a model trained on Dialogue NLI can be used to improve the consistency of a dialogue model, and evaluate the method with human evaluation and with automatic metrics on a suite of evaluation sets designed to measure a dialogue model{'}s consistency.",
+}
+@inproceedings{Wilie2020,
+    title = "{I}ndo{NLU}: Benchmark and Resources for Evaluating {I}ndonesian Natural Language Understanding",
+    author = "Wilie, Bryan  and
+      Vincentio, Karissa  and
+      Winata, Genta Indra  and
+      Cahyawijaya, Samuel  and
+      Li, Xiaohong  and
+      Lim, Zhi Yuan  and
+      Soleman, Sidik  and
+      Mahendra, Rahmad  and
+      Fung, Pascale  and
+      Bahar, Syafri  and
+      Purwarianti, Ayu",
+    booktitle = "Proceedings of the 1st Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics and the 10th International Joint Conference on Natural Language Processing",
+    month = dec,
+    year = "2020",
+    address = "Suzhou, China",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.aacl-main.85",
+    pages = "843--857",
+    abstract = "Although Indonesian is known to be the fourth most frequently used language over the internet, the research progress on this language in natural language processing (NLP) is slow-moving due to a lack of available resources. In response, we introduce the first-ever vast resource for training, evaluation, and benchmarking on Indonesian natural language understanding (IndoNLU) tasks. IndoNLU includes twelve tasks, ranging from single sentence classification to pair-sentences sequence labeling with different levels of complexity. The datasets for the tasks lie in different domains and styles to ensure task diversity. We also provide a set of Indonesian pre-trained models (IndoBERT) trained from a large and clean Indonesian dataset (Indo4B) collected from publicly available sources such as social media texts, blogs, news, and websites. We release baseline models for all twelve tasks, as well as the framework for benchmark evaluation, thus enabling everyone to benchmark their system performances.",
+}
+@inproceedings{William2018,
+    title = "A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference",
+    author = "Williams, Adina  and
+      Nangia, Nikita  and
+      Bowman, Samuel",
+    booktitle = "Proceedings of the 2018 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers)",
+    month = jun,
+    year = "2018",
+    address = "New Orleans, Louisiana",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/N18-1101",
+    doi = "10.18653/v1/N18-1101",
+    pages = "1112--1122",
+    abstract = "This paper introduces the Multi-Genre Natural Language Inference (MultiNLI) corpus, a dataset designed for use in the development and evaluation of machine learning models for sentence understanding. At 433k examples, this resource is one of the largest corpora available for natural language inference (a.k.a. recognizing textual entailment), improving upon available resources in both its coverage and difficulty. MultiNLI accomplishes this by offering data from ten distinct genres of written and spoken English, making it possible to evaluate systems on nearly the full complexity of the language, while supplying an explicit setting for evaluating cross-genre domain adaptation. In addition, an evaluation using existing machine learning models designed for the Stanford NLI corpus shows that it represents a substantially more difficult task than does that corpus, despite the two showing similar levels of inter-annotator agreement.",
+}
+@inproceedings{Wolf2019,
+    title = "Transformers: State-of-the-Art Natural Language Processing",
+    author = "Wolf, Thomas  and
+      Debut, Lysandre  and
+      Sanh, Victor  and
+      Chaumond, Julien  and
+      Delangue, Clement  and
+      Moi, Anthony  and
+      Cistac, Pierric  and
+      Rault, Tim  and
+      Louf, Remi  and
+      Funtowicz, Morgan  and
+      Davison, Joe  and
+      Shleifer, Sam  and
+      von Platen, Patrick  and
+      Ma, Clara  and
+      Jernite, Yacine  and
+      Plu, Julien  and
+      Xu, Canwen  and
+      Le Scao, Teven  and
+      Gugger, Sylvain  and
+      Drame, Mariama  and
+      Lhoest, Quentin  and
+      Rush, Alexander",
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = oct,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.emnlp-demos.6",
+    doi = "10.18653/v1/2020.emnlp-demos.6",
+    pages = "38--45",
+    abstract = "Recent progress in natural language processing has been driven by advances in both model architecture and model pretraining. Transformer architectures have facilitated building higher-capacity models and pretraining has made it possible to effectively utilize this capacity for a wide variety of tasks. Transformers is an open-source library with the goal of opening up these advances to the wider machine learning community. The library consists of carefully engineered state-of-the art Transformer architectures under a unified API. Backing this library is a curated collection of pretrained models made by and available for the community. Transformers is designed to be extensible by researchers, simple for practitioners, and fast and robust in industrial deployments. The library is available at \url{https://github.com/huggingface/transformers}.",
+}

@@ -1,0 +1,224 @@
+\documentclass[a4paper, conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\hyphenation{Mongo-silakan}
+\hyphenation{out-perform-ing}
+\hyphenation{class-ify-ing}
+\hyphenation{determin-ing}
+\hyphenation{develop-ment}
+\hyphenation{method-ology}
+
+\begin{document}
+
+\title{IndoJavaneseNLI: A Cross-Lingual Natural Language Inference Dataset for East Javanese "Ngoko" Register\\
+}
+
+\author{\IEEEauthorblockN{Jalaluddin Al-Mursyidy Fadhlurrahman\textsuperscript{1}, Ayu Purwarianti\textsuperscript{2}}
+\IEEEauthorblockA{\textit{School of Electrical Engineering and Informatics} \\
+\textit{Institut Teknologi Bandung}\\
+Bandung, Indonesia \\
+23521059@std.stei.itb.ac.id\textsuperscript{1}, ayu@staff.stei.itb.ac.id\textsuperscript{2}}
+\and
+% \IEEEauthorblockN{Ayu Purwarianti}
+% \IEEEauthorblockA{\textit{School of Electrical Engineering and Informatics} \\
+% \textit{Institut Teknologi Bandung}\\
+% Bandung, Indonesia \\
+% ayu@staff.stei.itb.ac.id\textsuperscript{2}}
+\and
+\IEEEauthorblockN{Alham Fikri Aji}
+\IEEEauthorblockA{\textit{Natural Language Processing Department} \\
+\textit{Mohamed bin Zayed University of Artificial Intelligence}\\
+Abu Dhabi, United Arab Emirate \\
+alham.fikri@mbzuai.ac.ae
+}
+}
+
+\maketitle
+
+\begin{abstract}
+Natural Language Inference (NLI) is a task that focuses on establishing the logical relationship between two sentences, premise sentences, and hypothesis sentences, by classifying it into "entailment", "neutral", and "contradiction". The growth of NLI models has been noteworthy in the English language. However, little to no progress has been made on low-resource languages, such as Javanese. What's more, the resulting translation from Machine Translation is blind to the cultural nuance of word choices. It tends to mix up words from various Javanese registers like "Ngoko", "Madya", and "Krama". To tackle that issue, we present IndoJavaneseNLI, a cross-lingual NLI dataset for East Javanese "Ngoko" registers. Our dataset consists of the premise sentences in the Indonesian language and the hypothesis sentences in the Javanese language. This paper describes how we carefully inspect the Javanese translation, the process leading up to the building of good East Javanese "Ngoko" sentences, and its evaluation with Transformer-based models and transfer learning. We also found that XLMR yields the best result in solving NLI problems with our dataset with the accuracy of $67.56\%$ on the fine-tuning method and $47.34\%$ on the transfer learning method.
+\end{abstract}
+
+\begin{IEEEkeywords}
+natural language inference, nli, cross-lingual nli, javanese nli, zero-shot, low-resource language, natural language processing, nlp
+\end{IEEEkeywords}
+
+\section{Introduction}
+Natural Language Inference (NLI), is a fundamental task in Natural Language Processing (NLP) that focuses on determining the logical relationship between two sentences, such as: "entailment", "neutral", and "contradiction"~\cite{Dagan2006}. The development of NLI models has gained significant attention in recent years, driven by its application in text summarization~\cite{Falke2019, Krysci2020}, context understanding~\cite{Parikh2016}, and question answering~\cite{Welleck20019}. While substantial progress has been made in NLI research, most efforts have been concentrated on high-resource languages, such as English.~\cite{Hedderich2021}, leaving many low-resource languages, like Javanese, understudied.
+
+This paper introduces the IndoJavaneseNLI, a cross-lingual natural language inference dataset for Javanese, to address the scarcity of NLI data in underrepresented languages. The Javanese language, spoken by more than 98 million people in Indonesia and the $21^{st}$ most spoken languages in the world~\cite{Eberhard2023}, serves as a prominent example of such a language. Despite its significant speaker base, research in NLI for Javanese has been largely neglected, limiting the potential for developing natural language understanding systems.
+
+IndoJavaneseNLI is constructed to facilitate research on NLI in Javanese and bridge the gap between NLI advancement in high-resource and low-resource languages. It includes diverse sentence pairs drawn from various domains and genres. Leveraging IndoJavaneseNLI, researchers can advance the state of NLI for low-resource languages and contribute to developing more inclusive and globally applicable natural language processing systems.
+
+In this paper, we present the details of the IndoJavaneseNLI dataset, its construction process, the data collection methodology, and an evaluation of baseline models' performance on the dataset. We aim to encourage and facilitate further research in NLI for low-resource languages, promoting linguistic diversity and inclusion in natural language processing. The release of IndoJavaneseNLI represents a step toward ensuring that NLI becomes accessible and effective for a broader range of languages, cultures, and communities, ultimately advancing the goal of a more inclusive and globally representative NLP research landscape.
+
+\section{Related Work}
+The Standford NLI (SNLI)~\cite{Bowman2015} was one of the pioneering contributions in the field of NLI. It consists of 570,152 diverse sentence pairs with human-annotated labels. SNLI provided a robust benchmark for NLI systems and played a pivotal role in the early development of neural models for this task. However, the sentences in SNLI derived from image captions, limiting the hypothesis sentences to be short and simple and restraining many critical phenomena like modality and temporal reasoning.
+
+Another effort has been made for NLI research, such as the Multi-NLI (MNLI)~\cite{William2018}. Unlike SNLI, MultiNLI features a more diverse set of genres and writing styles, making it a valuable resource for NLI research. MNLI comprises matched and mismatched sentence pairs, providing a challenging test bed for evaluating the robustness of NLI systems. Unlike its name, this dataset does not have the data parallel in another language. Another work has been made to extend the MNLI dataset with data in other languages, like XNLI.
+
+XNLI~\cite{Conneau2018} is a cross-lingual extension of MNLI to promote research in cross-lingual NLI. It covers 15 languages, including two low-resource languages, such as Swahili and Urdu. It serves as a crucial dataset for assessing the cross-lingual transferability of NLI models, encouraging the development of systems capable of handling multiple languages. One limitation of XNLI is that it lacks the cultural nuance of the target languages because of the translation process.
+
+The efforts to build datasets for other languages have been made using machine translation (MT) on existing English NLI datasets~\cite{Mehdad2011}. Sometimes, it is coupled with fewer human-annotated data\cite{Negri2011, Agic2018}. Except for the Original Chinese Natural Language Inference (OCNLI) dataset built using the human-annotation method~\cite{Hu2020}.
+
+Currently, there are three NLI datasets in the Indonesian language, namely WReTE~\cite{Setya2018}, INARTE~\cite{Abdiansah2018}, and IndoNLI~\cite{Mahendra2021}. Both WReTE and INARTE datasets only have a small number of sentence pairs, 400 pairs for WReTE and $\pm$1.5k pairs for INARTE, and use only two labels: "entailment" and "not-entailment"~\cite{Mahendra2021}. This makes IndoNLI the largest Indonesian NLI dataset, with $\pm$18k sentence pairs. IndoNLI was created using three genres: Wikipedia, news, and Web articles.
+
+\section{Dataset Construction}\label{datasetConstruction}
+\subsection{Data Source}\label{dataSource}
+To tackle the lack of Javanese language in the NLI task, we propose a cross-lingual NLI dataset that consists of the Indonesian-Javanese language. Our IndoJavaneseNLI is readily available in a public repository\footnote{\href{https://github.com/jalalAzhmatkhan/indojavanese-nli}{https://github.com/jalalAzhmatkhan/indojavanese-nli}}. We are using IndoNLI as our base data since IndoNLI is the largest NLI dataset in the Indonesian language. We only keep the premise sentences in Indonesian and translate the hypothesis into Javanese. The Javanese variant we use for our dataset is the East Javanese "Ngoko" variant of the Javanese language. We compare the resulting translation from Google Translate, Chat GPT OpenAI API, and Mongosilakan as our MT systems. The annotators then assessed the translation results of the three MT systems.
+
+\subsection{Annotation Protocol}\label{annotationProtocol}
+\subsubsection{Annotator's Requirements}\label{annotatorsRequirements}
+All annotators must be fluent in Indonesian and Javanese. We only choose annotators who are native residents of East Java since they are expected to be able to understand better the cultural implementation of the East Javanese "Ngoko" variant of the Javanese language.
+
+\subsubsection{Annotation Evaluation}\label{annotationEvaluation}
+Every data set consists of a premise sentence written in Indonesian and a pair of translated hypothesis sentences in Javanese. Each annotator was given the same parallel set of data. Then, the annotators marked the quality of the resulting hypothesis sentence from each MT with a 1-5 scale ("5" is the best, and "1" is the lowest). The order of appearance of data from each MT system is randomized for each row, and the order of appearance is kept secret from the annotator to ensure the objectivity of the annotation process. The annotators would check whether the translated sentences are free from grammatical errors, spelling, and punctuation. Moreover, the annotators would also check if the resulting translation changed the semantic relation between the premise and the hypothesis sentences.
+
+Observing the information between the two sentences could determine the semantic relation between sentences. A pair of premise-hypothesis sentences can be said to be "entailment" if it can be concluded that the hypothesis sentence is true based on the information in the premise sentence. If it can be concluded that the hypothesis sentence is false based on the information in the premise sentence, then the sentence pair is "contradiction". Otherwise, it is "neutral" if the truth of the hypothesis sentence cannot be determined based on the information in the premise sentence or if there is not enough information in the hypothesis sentence.
+
+\subsubsection{Gold Label}\label{goldLabel}
+The gold label is the main label that will be used to mark the quality of the translation of hypothesis sentences in Javanese. Firstly, to obtain the gold labels, we need to get the average mark of the annotated labels from each annotator grouped by its MT sources. Then, we calculate the average of each MT system from all annotators. Next, we decide which MT system has the highest mark as a translation baseline. Finally, we re-calculate the label average from all annotators for that selected MT. The resulting average for the best MT data will be chosen as the gold label. If a gold label for a pair of data is less than $3$, the data is flagged as "broken" and should be fixed.
+
+\subsubsection{Data Fixing}\label{dataFixing}
+The data flagged as "broken" should be fixed using several strategies by another independent expert annotator. The newly created hypothesis sentence in Javanese could be made by removing or inserting one or more words from the premise sentence. The independent annotator could also replace one or more words from the premise sentence with a synonym, antonym, hypernym, or hyponym; or he could paraphrase. Alternatively, the independent annotator could change the sentence structure, for example, from passive to active. The fixed sentence must be in Javanese and would be re-annotated following the annotation protocol mentioned earlier.
+
+\begin{table*}[!t]
+\begin{center}
+\begin{tabular}{ccc}
+\hline
+\textbf{Hypothesis in Indonesian} & \textbf{Hypothesis in Javanese (Before Annotation)} & \textbf{Hypothesis in Javanese (After Annotation)} \\
+\hline
+Yuko Hara tidak pernah mengambil cuti. & Yuko Hara ora \textbf{nate} liburan. & Yuko Hara ora tau cuti. \\
+\multicolumn{3}{c}{\textit{(Yuko Hara never takes leave.)}} \\ 
+\hline
+Teks berjalan selalu diposting untuk kisah nyata. & Running text \textbf{tansah} dikirim \textbf{kanggo} crita nyata. & Tulisan mlaku mesti digawe nang kisah nyata \\
+\multicolumn{3}{c}{\textit{(Running text is always posted for the real story.)}} \\ 
+\hline
+Hillary Clinton maju sebagai calon Presiden. & Hillary Clinton mlaku \textbf{minangka} calon presiden. & Hillary Clinton maju nyalon presiden \\
+\multicolumn{3}{c}{\textit{(Hillary Clinton is running as a presidential candidate.)}} \\ 
+\hline
+\end{tabular}
+\captionsetup{labelformat=default}
+\caption{Sample of translated data straight from MT system (the "Before Annotation" column) and data that has been annotated into East Javanese "Ngoko" registers.}
+\label{tblComparation}
+\end{center}
+\end{table*}
+
+\subsubsection{Resulting Corpus and Annotation}\label{resultingCorpus}
+After the first round of annotation, we have Google Translate as the best average annotation score ($4.15$ out of $5$), followed closely by Mongosilakan ($4.08$ out of $5$) and ChatGPT API ($3.31$ out of $5$). As a result, we use Google Translate as our main MT source. However, the resulting translations still have various Javanese registers, such as "Ngoko" and "Krama", mixed up in one sentence, as can be seen in Table~\ref{tblComparation} in words in bold. For instance, the word "nate" and "kanggo" are words in Central Javanese "Ngoko" register, meanwhile, the words "tansah" and "minangka" are in the "Kromo Inggil" Javanese register. This may happened because the current MT system does not have any knowledge regarding the cultural usage of the Javanese registers. The annotation process in this step was quite challenging because of the many registers in the Javanese language. Ridiculously, some MT systems improvise by inserting some English vocabulary into their translation, as shown in Table~\ref{tblComparation}. We ran another round of annotation after fixing the data with an annotation score lower than a threshold. The gold label selection process yields an average score of $4.05$, with only six broken sentences on the first round of annotation. After fixing the broken sentences, all resulting translated data yields an average score of $4.1$ out of $5$ without any broken sentences.
+
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+\textbf{Classes} & \textbf{Train} & \textbf{Validation} & \textbf{Test} \\
+\hline
+Entailment & 3476 & 807 & 808 \\
+Neutral & 3415 & 749 & 629 \\
+Contradiction & 3439 & 641 & 764 \\
+\hline
+\end{tabular}
+\captionsetup{labelformat=default}
+\caption{IndoJavaneseNLI corpus statistics.}
+\label{tblClasses}
+\end{center}
+\end{table}
+
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{cccc}
+\hline
+ & \textbf{Jaccard} & \textbf{LCS} & \textbf{New token rate} \\
+\hline
+Entailment & 6.13 & 3.93 & 66.4 \\
+Neutral & 4.36 & 3.21 & 72.04 \\
+Contradiction & 5.95 & 3.73 & 68.28 \\
+\hline
+\end{tabular}
+\captionsetup{labelformat=default}
+\caption{Word overlap between premise and hypothesis sentence in test split.}
+\label{tblWordOverlap}
+\end{center}
+\end{table}
+
+Since our dataset derives from IndoNLI~\cite{Mahendra2021}, our dataset has the exact class count per split, as shown in Table~\ref{tblClasses}. We see that the three classes are relatively balanced. The word overlap analysis shown in Table~\ref{tblWordOverlap} suggests that our dataset has minimal lexical overlap between the Indonesian premise sentence and the Javanese hypothesis sentence, both ordered and unordered. While the Jaccard index and LCS similarity scored very low, the opposite can be said for the new token rate. The new token rate measures the percentage of hypothesis tokens that do not exist in premise tokens. The high new token rate suggests that our dataset has a highly diverse token generated from having the premise and hypothesis in different languages.
+
+\section{Experiments}
+We experiment with several Transformer-based models: multilingual BERT, BERT~\cite{Devlin2019}, IndoBERT~\cite{Wilie2020}, and XLMR~\cite{Conneau2020}. We used base and large architecture for BERT and XLMR, as for the others, we used the base architecture only. We tried several experiments like fine-tuning the model, zero-shot experiments by only training in the Indonesian language, and transfer learning. We tried various training scenarios to test our dataset.
+
+\subsection{Experiment scenarios and Hyperparameters}
+For the mBERT fine-tuning experiment, we use a learning rate of $3 \times 10^{-6}$, $6$ epochs, a token max length of $256$, and a batch size of $8$. The BERT$_{(base)}$ and IndoBERT used the same hyperparameters, except for the batch size which is $4$. Fine-tuning BERT$_{(large)}$ used learning rate $1 \times 10^{-5}$, $10$ epochs, batch size $2$, and a token max length of $512$. We use learning rate $1 \times 10^{-6}$, token max length of $512$, $15$ epochs, and batch size $4$ for fine-tuning the XLMR$_{(base)}$ model. To fine-tune the XLMR$_{(large)}$ model, we use learning rate $3 \times 10^{-6}$, token max length of $512$, $6$ epochs, and batch size 2. For our transfer learning method, we have the Transformer-based models fine-tuned in Indonesian language sentence pairs as the teacher models and use them to infer our IndoJavaneseNLI dataset.
+
+We used the Huggingface Transformers~\cite{Wolf2019} for all fine-tuning scenarios, AdamW~\cite{Loshchilov2019} as an optimizer, and Pytorch~\cite{Paszke2017} for all training experiments. Our research was done on various GPU devices, such as NVIDIA GeForce RTX 3060, NVIDIA A100 Tensor Core, and Tesla P100 Data Center Accelerator.
+
+\section{Results and Analysis}
+\subsection{Fine-Tuning Transformer-based Models}
+Table~\ref{tblBaselineModel} reports the performance of fine-tuning the Transformer-based models. As expected, the zero-shot method yields the lowest accuracy even on the XLMR model, which is $44.51\%$. The other models yield an average of $60s\%$ in accuracy, except when using XLMR$_{(large)}$. The XLMR$_{(large)}$ model outperforms others, even IndoBERT. This may indicate that XLMR$_{(large)}$ has a larger training corpus in Javanese than the other models and architecture. This finding is in line with IndoNLI and IndoNLU benchmark results~\cite{Mahendra2021, Wilie2020}.
+
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{ccc}
+\hline
+\textbf{Experiment} & \textbf{Accuracy (\%)}& \textbf{F1 Score (\%)} \\
+\hline
+mBERT & 62.9 & 63.1  \\
+IndoBERT$_{(base)}$ & 61.47 & 61.46  \\
+IndoBERT$_{(large)}$ & 62.92 & 63.06 \\
+BERT$_{(base)}$ & 60.63 & 60.88  \\
+BERT$_{(large)}$ & 59.83 & 60.13  \\
+XLMR$_{(base)}$ & 62.15 & 62.4  \\
+XLMR$_{(large)}$ & 67.56 & 67.7  \\
+XLMR$_{(zero-shot)}$ & 44.51 & 41.02  \\
+\hline
+\end{tabular}
+\captionsetup{labelformat=default}
+\caption{Fine-Tuning experiment results using transformer-based models.}
+\label{tblBaselineModel}
+\end{center}
+\end{table}
+
+\subsection{Transfer Learning}
+Another experiment to test our dataset is by utilizing the transfer learning method. We fine-tuned the baseline models in the Indonesian language for both premise and hypothesis sentences and used the model to infer our dataset. Table~\ref{tblTransferLearning} shows us that XLMR$_{(base)}$ yielded the highest score, outperforming the mBERT model.
+
+\begin{table}[!t]
+\centering
+\begin{tabular}{p{0.6in}p{0.6in}p{0.6in}p{0.4in}p{0.4in}}
+\hline
+\textbf{Experiment} & \textbf{Teacher} & \textbf{Student} & \textbf{Accuracy (\%)}& \textbf{F1 Score (\%)} \\
+\hline
+mBERT & Indonesian - Indonesian & Indonesian - Javanese & 43.28 & 40.15  \\
+XLMR$_{(base)}$ & Indonesian - Indonesian & Indonesian - Javanese & 47.34 & 45.55  \\
+\hline
+\end{tabular}
+\captionsetup{labelformat=default}
+\caption{Transfer learning experiment results.}
+\label{tblTransferLearning}
+\end{table}
+
+\section{Conclusion}
+We present IndoJavaneseNLI, the NLI dataset specifically created for East Javanese "Ngoko" Registers. This dataset is created to address the lack of NLI data in Javanese. We found that the MT system does not fully understand the cultural nuance of word choices. The resulting translated sentences tend to mix up various Javanese registers, such as "Ngoko" and "Krama". To address this issue, we annotate the translated Javanese data and fix the word choices based on the annotation score.
+We have performed fine-tuning and transfer learning methods to evaluate existing language models for our dataset. We found that XLMR$_{(large)}$ yielded the best result in both experiments.
+
+\section{Limitations and Ethical Considerations}
+We are using the IndoNLI~\cite{Mahendra2021} as our base, which was created using data from Wikipedia, various news, and web domains. The data origin of our source may contain harmful content and stereotypes.
+
+\section*{Acknowledgements}
+We want to thank Hayyu Rachma Widya Aulya, Andika Octavia Pratama Putra, Muhammad Fahmy Nadhif, and Muhammad Daimus Suudi for their contribution in assisting the annotation process. We also thank Mohamed Bin Zayed University of Artificial Intelligence (MBZUAI) for allowing us to use the NVIDIA A100 Tensor Core for parallel training.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
