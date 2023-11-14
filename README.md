@@ -7,3 +7,5 @@ Natural Language Inference (NLI) is a task that focuses on establishing the logi
 My Overleaf-based manuscripts could be accessed by using this link:
 1. [IndoJavaneseNLI: A Cross-Lingual Natural Language Inference Dataset for East Javanese "Ngoko" Register](https://www.overleaf.com/read/nfwrmbzgbcjs#fd61fd)
 2. [Thesis Book (_on progress_)](https://www.overleaf.com/read/xbgbffdsjkbg#607e7a)
+
+My thesis progress will always be updated on this online PPT: [link](https://docs.google.com/presentation/d/1lpXH0LP6a9eBsxmfm4EnsDuESoRE2j2L9rYTyC8tCVE/edit?usp=sharing)
