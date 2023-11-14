@@ -1,3 +1,5 @@
 # Indo-Javanese NLI
 
 A Cross-lingual Natural Language Inference from Indonesian to Javanese.
+
+Natural Language Inference (NLI) is a task that focuses on establishing the logical relationship between two sentences, premise sentences, and hypothesis sentences, by classifying it into "entailment", "neutral", and "contradiction". The growth of NLI models has been noteworthy in the English language. However, little to no progress has been made on low-resource languages, such as Javanese. What's more, the resulting translation from Machine Translation is blind to the cultural nuance of word choices. It tends to mix up words from various Javanese registers like "Ngoko", "Madya", and "Krama". To tackle that issue, we present "IndoJavaneseNLI", a cross-lingual NLI dataset for East Javanese "Ngoko" registers. Our dataset consists of the premise sentences in the Indonesian language and the hypothesis sentences in the Javanese language. Our research also aims to evaluate the transfer learning method in order to inspect cross-lingual transferability from Indonesian to Javanese language.
